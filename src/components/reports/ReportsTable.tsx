@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,16 @@ import {
   FiChevronRight,
   FiTable,
   FiFilter,
+  FiDownload,
+  FiFileText,
+  FiGrid,
+  FiFile,
+  FiLoader,
+  FiCheck,
+  FiChevronDown as FiDropdown,
 } from "react-icons/fi";
+import { exportToPDF, exportToExcel, exportToCSV, ExportType } from "@/lib/exportUtils";
+import { formatDate } from "@/lib/utils";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -27,6 +36,33 @@ const itemVariants = {
 };
 
 const ITEMS_PER_PAGE = 10;
+
+const exportOptions = [
+  {
+    format: 'pdf' as const,
+    label: 'PDF',
+    description: 'Laporan dalam format PDF',
+    icon: FiFileText,
+    color: 'text-red-600 dark:text-red-400',
+    bgColor: 'hover:bg-red-50 dark:hover:bg-red-900/20',
+  },
+  {
+    format: 'excel' as const,
+    label: 'Excel',
+    description: 'Spreadsheet Excel (.xlsx)',
+    icon: FiGrid,
+    color: 'text-green-600 dark:text-green-400',
+    bgColor: 'hover:bg-green-50 dark:hover:bg-green-900/20',
+  },
+  {
+    format: 'csv' as const,
+    label: 'CSV',
+    description: 'Comma Separated Values',
+    icon: FiFile,
+    color: 'text-blue-600 dark:text-blue-400',
+    bgColor: 'hover:bg-blue-50 dark:hover:bg-blue-900/20',
+  },
+];
 
 const LoadingSkeleton = () => (
   <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-0 shadow-lg">
@@ -89,6 +125,24 @@ export default function ReportsTable({
   const [sortColumn, setSortColumn] = useState("");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportFormat, setExportFormat] = useState<string | null>(null);
+  const [showExportDropdown, setShowExportDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowExportDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Filter and sort data
   const filteredAndSortedData = useMemo(() => {
@@ -145,6 +199,69 @@ export default function ReportsTable({
     setSearchQuery(query);
     setCurrentPage(1);
     onSearch?.(query);
+  };
+
+  const handleExport = async (format: 'pdf' | 'excel' | 'csv') => {
+    setIsExporting(true);
+    setExportFormat(format);
+    setShowExportDropdown(false);
+
+    try {
+      console.log('Starting export process...', { format, type, dataLength: filteredAndSortedData.length });
+
+      // Validate data
+      if (!filteredAndSortedData || filteredAndSortedData.length === 0) {
+        throw new Error('Tidak ada data untuk diekspor');
+      }
+
+      const exportData = filteredAndSortedData;
+      const exportType = type as ExportType;
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `laporan-${type}-${timestamp}`;
+
+      console.log('Export data prepared:', { exportType, filename, dataCount: exportData.length });
+
+      switch (format) {
+        case 'pdf':
+          await exportToPDF(exportData, exportType, {
+            filename: `${filename}.pdf`,
+            title: `Laporan ${type === 'transactions' ? 'Transaksi' : type === 'inventory' ? 'Inventori' : 'Pelanggan'}`,
+            subtitle: `Total: ${exportData.length} data | Diekspor pada ${new Date().toLocaleDateString('id-ID')}`,
+          });
+          break;
+        case 'excel':
+          await exportToExcel(exportData, exportType, {
+            filename: `${filename}.xlsx`,
+          });
+          break;
+        case 'csv':
+          await exportToCSV(exportData, exportType, {
+            filename: `${filename}.csv`,
+          });
+          break;
+        default:
+          throw new Error(`Format ekspor tidak didukung: ${format}`);
+      }
+
+      console.log('Export completed successfully');
+
+      // Show success state
+      setExportFormat(format);
+
+      // Reset export state after a short delay
+      setTimeout(() => {
+        setIsExporting(false);
+        setExportFormat(null);
+      }, 2000);
+    } catch (error) {
+      console.error('Export error:', error);
+
+      // Show error to user (you might want to add a toast notification here)
+      alert(`Gagal mengekspor data: ${error instanceof Error ? error.message : 'Terjadi kesalahan yang tidak diketahui'}`);
+
+      setIsExporting(false);
+      setExportFormat(null);
+    }
   };
 
   const SortIcon = ({ column }: { column: string }) => {
@@ -283,7 +400,7 @@ export default function ReportsTable({
                 {transaction.transactionNumber}
               </td>
               <td className="p-3 text-sm text-gray-600 dark:text-gray-300">
-                {new Date(transaction.date).toLocaleDateString('id-ID')}
+                {formatDate(transaction.date)}
               </td>
               <td className="p-3 text-sm text-gray-600 dark:text-gray-300">
                 {transaction.customerName || "Guest"}
@@ -373,7 +490,7 @@ export default function ReportsTable({
     <motion.div variants={itemVariants}>
       <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-0 shadow-lg">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
             <div className="flex items-center space-x-2">
               <FiTable className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               <div>
@@ -385,17 +502,73 @@ export default function ReportsTable({
                 </p>
               </div>
             </div>
-            
-            {/* Search */}
-            <div className="relative w-64">
-              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                type="text"
-                placeholder="Cari data..."
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="pl-10"
-              />
+
+            <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
+              {/* Export Dropdown */}
+              <div className="relative" ref={dropdownRef}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowExportDropdown(!showExportDropdown)}
+                  disabled={isExporting || filteredAndSortedData.length === 0}
+                  className="flex items-center justify-center space-x-2 w-full sm:w-auto"
+                >
+                  {isExporting ? (
+                    <FiLoader className="w-4 h-4 animate-spin" />
+                  ) : exportFormat ? (
+                    <FiCheck className="w-4 h-4 text-green-600" />
+                  ) : (
+                    <FiDownload className="w-4 h-4" />
+                  )}
+                  <span className="hidden sm:inline">
+                    {isExporting ? 'Mengekspor...' : exportFormat ? 'Berhasil!' : 'Ekspor'}
+                  </span>
+                  <FiDropdown className="w-3 h-3" />
+                </Button>
+
+                {/* Export Dropdown Menu */}
+                {showExportDropdown && !isExporting && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute right-0 sm:right-0 left-0 sm:left-auto top-full mt-2 w-full sm:w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
+                  >
+                    <div className="p-2">
+                      <div className="text-xs font-medium text-gray-500 dark:text-gray-400 px-3 py-2 border-b border-gray-100 dark:border-gray-700">
+                        Pilih Format Ekspor
+                      </div>
+                      {exportOptions.map((option) => (
+                        <button
+                          key={option.format}
+                          onClick={() => handleExport(option.format)}
+                          className={`w-full flex items-center space-x-3 px-3 py-2 text-left rounded-md transition-colors ${option.bgColor} ${option.color}`}
+                        >
+                          <option.icon className="w-4 h-4" />
+                          <div>
+                            <div className="text-sm font-medium">{option.label}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              {option.description}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+
+              {/* Search */}
+              <div className="relative w-full sm:w-64">
+                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  type="text"
+                  placeholder="Cari data..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
           </div>
         </CardHeader>

@@ -156,7 +156,8 @@ export interface ReportsTableProps {
 export interface ReportsExportProps {
   reportType: ReportType;
   filters: ReportFilters;
-  onExport: (format: ExportFormat) => Promise<void>;
+  data?: TransactionReportData[] | InventoryReportData[] | CustomerReportData[];
+  onExport?: (format: ExportFormat) => Promise<void>;
   isExporting?: boolean;
 }
 

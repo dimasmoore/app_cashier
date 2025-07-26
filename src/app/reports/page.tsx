@@ -24,6 +24,7 @@ import {
   ReportsTable,
   ReportsExport,
 } from "@/components/reports";
+
 import ErrorBoundary from "@/components/ErrorBoundary";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import { validateDateRange, sanitizeSearchQuery } from "@/lib/validation";
@@ -36,6 +37,8 @@ import {
   ReportMetric,
   SalesReportData,
   TransactionReportData,
+  InventoryReportData,
+  CustomerReportData,
 } from "@/types/reports";
 
 const containerVariants = {
@@ -191,11 +194,12 @@ export default function ReportsPage() {
     isRealTime: false,
   });
 
-  const [tableData, setTableData] = useState<TransactionReportData[]>([
+  // Separate state for different data types
+  const [transactionData, setTransactionData] = useState<TransactionReportData[]>([
     {
       id: "1",
       transactionNumber: "TRX001",
-      date: "2024-01-15",
+      date: "2024-01-15T10:30:00Z",
       customerName: "John Doe",
       items: 3,
       subtotal: 150000,
@@ -208,7 +212,7 @@ export default function ReportsPage() {
     {
       id: "2",
       transactionNumber: "TRX002",
-      date: "2024-01-15",
+      date: "2024-01-16T14:45:00Z",
       customerName: "Jane Smith",
       items: 2,
       subtotal: 200000,
@@ -218,7 +222,36 @@ export default function ReportsPage() {
       paymentMethod: "Kartu Kredit",
       status: "COMPLETED",
     },
+    {
+      id: "3",
+      transactionNumber: "TRX003",
+      date: "2024-01-17",
+      customerName: "Bob Wilson",
+      items: 1,
+      subtotal: 75000,
+      tax: 7500,
+      discount: 0,
+      total: 82500,
+      paymentMethod: "E-Wallet",
+      status: "PENDING",
+    },
+    {
+      id: "4",
+      transactionNumber: "TRX004",
+      date: new Date().toISOString(),
+      customerName: undefined,
+      items: 4,
+      subtotal: 300000,
+      tax: 30000,
+      discount: 15000,
+      total: 315000,
+      paymentMethod: "Transfer Bank",
+      status: "COMPLETED",
+    },
   ]);
+
+  const [inventoryData, setInventoryData] = useState<InventoryReportData[]>([]);
+  const [customerData, setCustomerData] = useState<CustomerReportData[]>([]);
 
   // API fetching functions
   const fetchSalesData = useCallback(async () => {
@@ -311,13 +344,79 @@ export default function ReportsPage() {
 
       const result = await response.json();
       if (result.success) {
-        setTableData(result.data);
+        setTransactionData(result.data);
       } else {
         throw new Error(result.error || 'Failed to fetch transaction data');
       }
     } catch (error) {
       console.error('Error fetching transaction data:', error);
       setTransactionsError(error instanceof Error ? error.message : 'Failed to fetch transaction data');
+    } finally {
+      setIsLoadingTransactions(false);
+    }
+  }, [filters]);
+
+  // Fetch inventory data
+  const fetchInventoryData = useCallback(async () => {
+    setIsLoadingTransactions(true);
+    try {
+      const params = new URLSearchParams({
+        startDate: filters.dateRange.startDate.toISOString(),
+        endDate: filters.dateRange.endDate.toISOString(),
+      });
+
+      if (filters.status && filters.status !== 'all') {
+        params.append('status', filters.status);
+      }
+
+      const response = await fetch(`/api/reports/inventory?${params}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch inventory data');
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        setInventoryData(result.data);
+      } else {
+        throw new Error(result.error || 'Failed to fetch inventory data');
+      }
+    } catch (error) {
+      console.error('Error fetching inventory data:', error);
+      setInventoryData([]);
+    } finally {
+      setIsLoadingTransactions(false);
+    }
+  }, [filters]);
+
+  // Fetch customer data
+  const fetchCustomerData = useCallback(async () => {
+    setIsLoadingTransactions(true);
+    try {
+      const params = new URLSearchParams({
+        startDate: filters.dateRange.startDate.toISOString(),
+        endDate: filters.dateRange.endDate.toISOString(),
+      });
+
+      if (filters.status && filters.status !== 'all') {
+        params.append('status', filters.status);
+      }
+
+      const response = await fetch(`/api/reports/customers?${params}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch customer data');
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        setCustomerData(result.data);
+      } else {
+        throw new Error(result.error || 'Failed to fetch customer data');
+      }
+    } catch (error) {
+      console.error('Error fetching customer data:', error);
+      setCustomerData([]);
     } finally {
       setIsLoadingTransactions(false);
     }
@@ -333,21 +432,47 @@ export default function ReportsPage() {
     setIsLoading(false);
   }, [session, status, router]);
 
-  // Fetch data when component mounts or filters change
-  useEffect(() => {
-    if (session && !isLoading) {
-      fetchSalesData();
-      fetchTransactionData();
+  // Fetch appropriate data based on report type
+  const fetchDataForReportType = useCallback(() => {
+    if (!session || isLoading) return;
+
+    fetchSalesData(); // Always fetch sales data for metrics
+
+    switch (filters.reportType) {
+      case 'transactions':
+      case 'sales':
+        fetchTransactionData();
+        break;
+      case 'inventory':
+      case 'products':
+        fetchInventoryData();
+        break;
+      case 'customers':
+        fetchCustomerData();
+        break;
+      default:
+        fetchTransactionData();
+        break;
     }
-  }, [session, isLoading, fetchSalesData, fetchTransactionData]);
+  }, [
+    session,
+    isLoading,
+    filters.reportType,
+    fetchSalesData,
+    fetchTransactionData,
+    fetchInventoryData,
+    fetchCustomerData
+  ]);
+
+  // Fetch data when component mounts
+  useEffect(() => {
+    fetchDataForReportType();
+  }, [session, isLoading, fetchSalesData, fetchTransactionData, fetchInventoryData, fetchCustomerData]);
 
   // Refresh data when filters change
   useEffect(() => {
-    if (session && !isLoading) {
-      fetchSalesData();
-      fetchTransactionData();
-    }
-  }, [filters, session, isLoading, fetchSalesData, fetchTransactionData]);
+    fetchDataForReportType();
+  }, [filters, fetchDataForReportType]);
 
   // Handle filter changes
   const handleFiltersChange = useCallback((newFilters: ReportFilters) => {
@@ -366,17 +491,56 @@ export default function ReportsPage() {
 
 
 
-  // Handle export
+  // Get current table data based on report type
+  const getCurrentTableData = useCallback(() => {
+    switch (filters.reportType) {
+      case 'transactions':
+      case 'sales':
+        return transactionData;
+      case 'inventory':
+      case 'products':
+        return inventoryData;
+      case 'customers':
+        return customerData;
+      default:
+        return transactionData;
+    }
+  }, [filters.reportType, transactionData, inventoryData, customerData]);
+
+  // Map report type to table type
+  const getTableType = useCallback((): 'transactions' | 'inventory' | 'customers' => {
+    switch (filters.reportType) {
+      case 'transactions':
+      case 'sales':
+        return 'transactions';
+      case 'inventory':
+      case 'products':
+        return 'inventory';
+      case 'customers':
+        return 'customers';
+      default:
+        return 'transactions';
+    }
+  }, [filters.reportType]);
+
+  // Get export data based on report type
+  const getExportData = useCallback(() => {
+    const exportData = getCurrentTableData();
+
+    console.log('getExportData called:', {
+      reportType: filters.reportType,
+      dataLength: exportData?.length || 0,
+      dataType: Array.isArray(exportData) ? 'array' : typeof exportData,
+      sampleData: exportData?.[0]
+    });
+
+    return exportData;
+  }, [filters.reportType, getCurrentTableData]);
+
+  // Handle export (kept for backward compatibility)
   const handleExport = useCallback(async (format: ExportFormat) => {
-    // Simulate export process
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // In real app, this would trigger actual export
     console.log(`Exporting ${filters.reportType} report as ${format}`);
-    
-    // Simulate file download
-    const filename = `laporan-${filters.reportType}-${format}`;
-    console.log(`Downloaded: ${filename}`);
+    // This is now handled by the ReportsExport component itself
   }, [filters]);
 
   // Handle refresh
@@ -536,8 +700,8 @@ export default function ReportsPage() {
             </div>
           ) : (
             <ReportsTable
-              data={tableData}
-              type="transactions"
+              data={getCurrentTableData()}
+              type={getTableType()}
               isLoading={isLoadingTransactions}
             />
           )}
@@ -548,6 +712,7 @@ export default function ReportsPage() {
           <ReportsExport
             reportType={filters.reportType}
             filters={filters}
+            data={getExportData()}
             onExport={handleExport}
             isExporting={false}
           />

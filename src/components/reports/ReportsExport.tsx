@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ReportsExportProps, ExportFormat } from "@/types/reports";
+import { exportToPDF, exportToExcel, exportToCSV, ExportType } from "@/lib/exportUtils";
+import { formatDate } from "@/lib/utils";
 import {
   FiDownload,
   FiFileText,
@@ -63,6 +65,7 @@ interface ExportState {
 export default function ReportsExport({
   reportType,
   filters,
+  data = [],
   onExport,
   isExporting = false,
 }: ReportsExportProps) {
@@ -71,7 +74,43 @@ export default function ReportsExport({
     status: "idle",
   });
 
+  // Debug logging
+  console.log('ReportsExport component props:', {
+    reportType,
+    dataLength: data?.length || 0,
+    hasOnExport: !!onExport,
+    isExporting,
+    data: data?.slice(0, 2) // Log first 2 items for debugging
+  });
+
+  // Browser compatibility check
+  const checkBrowserSupport = () => {
+    const hasBlob = typeof Blob !== 'undefined';
+    const hasURL = typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function';
+    const hasDownload = typeof document !== 'undefined' && 'download' in document.createElement('a');
+
+    console.log('Browser support check:', {
+      hasBlob,
+      hasURL,
+      hasDownload,
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown'
+    });
+
+    return hasBlob && hasURL && hasDownload;
+  };
+
+  // Check browser support on component mount
+  useEffect(() => {
+    const isSupported = checkBrowserSupport();
+    if (!isSupported) {
+      console.warn('Browser may not support file downloads');
+    }
+  }, []);
+
   const handleExport = async (format: ExportFormat) => {
+    console.log('handleExport called with format:', format);
+    console.log('Current data:', { length: data?.length, sample: data?.[0] });
+
     setExportState({
       format,
       status: "loading",
@@ -79,7 +118,17 @@ export default function ReportsExport({
     });
 
     try {
-      await onExport(format);
+      // Always use built-in export functionality for better control
+      // The onExport prop is now just for backward compatibility/notifications
+      console.log('Using built-in export functionality');
+      await performExport(format);
+
+      // If onExport prop is provided, call it for notifications (but don't await it)
+      if (onExport) {
+        console.log('Calling onExport prop for notifications');
+        onExport(format).catch(err => console.warn('onExport prop failed:', err));
+      }
+
       setExportState({
         format,
         status: "success",
@@ -91,6 +140,7 @@ export default function ReportsExport({
         setExportState({ format: null, status: "idle" });
       }, 3000);
     } catch (error) {
+      console.error('Export failed:', error);
       setExportState({
         format,
         status: "error",
@@ -101,6 +151,96 @@ export default function ReportsExport({
       setTimeout(() => {
         setExportState({ format: null, status: "idle" });
       }, 5000);
+    }
+  };
+
+  const performExport = async (format: ExportFormat) => {
+    console.log('performExport called with:', {
+      format,
+      reportType,
+      dataLength: data?.length || 0,
+      dataType: Array.isArray(data) ? 'array' : typeof data,
+      firstItem: data?.[0]
+    });
+
+    // Enhanced data validation
+    if (!data) {
+      console.error('No data provided to performExport');
+      throw new Error('Tidak ada data yang tersedia untuk diekspor');
+    }
+
+    if (!Array.isArray(data)) {
+      console.error('Data is not an array:', typeof data);
+      throw new Error('Format data tidak valid');
+    }
+
+    if (data.length === 0) {
+      console.error('Data array is empty for report type:', reportType);
+      const reportTypeLabel = getReportTypeLabel(reportType);
+      throw new Error(`Tidak ada data ${reportTypeLabel.toLowerCase()} untuk diekspor. Silakan periksa filter tanggal atau tambahkan data terlebih dahulu.`);
+    }
+
+    // Map report type to export type
+    const exportType = getExportType(reportType);
+    console.log('Mapped export type:', exportType);
+
+    const timestamp = new Date().toISOString().split('T')[0];
+    const filename = `laporan-${reportType}-${timestamp}`;
+
+    console.log('Export filename:', filename);
+
+    const exportOptions = {
+      title: `Laporan ${getReportTypeLabel(reportType)}`,
+      subtitle: `Periode: ${formatDateRange()} | Total: ${data.length} data | Diekspor pada ${formatDate(new Date())}`,
+    };
+
+    console.log('Export options:', exportOptions);
+
+    try {
+      switch (format) {
+        case 'pdf':
+          console.log('Starting PDF export...');
+          await exportToPDF(data, exportType, {
+            filename: `${filename}.pdf`,
+            ...exportOptions,
+          });
+          console.log('PDF export completed');
+          break;
+        case 'excel':
+          console.log('Starting Excel export...');
+          await exportToExcel(data, exportType, {
+            filename: `${filename}.xlsx`,
+          });
+          console.log('Excel export completed');
+          break;
+        case 'csv':
+          console.log('Starting CSV export...');
+          await exportToCSV(data, exportType, {
+            filename: `${filename}.csv`,
+          });
+          console.log('CSV export completed');
+          break;
+        default:
+          throw new Error(`Format ekspor tidak didukung: ${format}`);
+      }
+    } catch (exportError) {
+      console.error(`${format.toUpperCase()} export failed:`, exportError);
+      throw exportError;
+    }
+  };
+
+  const getExportType = (reportType: string): ExportType => {
+    switch (reportType) {
+      case 'transactions':
+      case 'sales':
+        return 'transactions';
+      case 'inventory':
+      case 'products':
+        return 'inventory';
+      case 'customers':
+        return 'customers';
+      default:
+        return 'transactions'; // Default fallback
     }
   };
 
@@ -117,9 +257,14 @@ export default function ReportsExport({
   };
 
   const formatDateRange = () => {
-    const startDate = filters.dateRange.startDate.toLocaleDateString('id-ID');
-    const endDate = filters.dateRange.endDate.toLocaleDateString('id-ID');
-    return `${startDate} - ${endDate}`;
+    try {
+      const startDate = formatDate(filters?.dateRange?.startDate);
+      const endDate = formatDate(filters?.dateRange?.endDate);
+      return `${startDate} - ${endDate}`;
+    } catch (error) {
+      console.warn('Error formatting date range:', error);
+      return 'Periode tidak tersedia';
+    }
   };
 
   return (
@@ -170,9 +315,16 @@ export default function ReportsExport({
 
           {/* Export Options */}
           <div>
-            <h4 className="text-sm font-medium text-gray-800 dark:text-white mb-3">
-              Pilih Format Ekspor
-            </h4>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-medium text-gray-800 dark:text-white">
+                Pilih Format Ekspor
+              </h4>
+              {(!data || data.length === 0) && (
+                <span className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded">
+                  Tidak ada data untuk diekspor
+                </span>
+              )}
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {exportOptions.map((option) => {
                 const isCurrentlyExporting = 
@@ -191,7 +343,7 @@ export default function ReportsExport({
                     <Button
                       variant="outline"
                       onClick={() => handleExport(option.format)}
-                      disabled={isExporting || isCurrentlyExporting}
+                      disabled={isExporting || isCurrentlyExporting || !data || data.length === 0}
                       className={`w-full h-auto p-4 flex flex-col items-center space-y-2 ${option.bgColor} border-2 ${
                         isSuccess
                           ? "border-green-300 dark:border-green-600"

@@ -112,10 +112,18 @@ export async function GET(request: NextRequest) {
     const formattedTransactions = transactions.map(transaction => ({
       id: transaction.id,
       transactionNumber: transaction.transactionNumber,
+      date: transaction.createdAt.toISOString(), // Map createdAt to date for consistency
+      customerName: transaction.customer ?
+        `${transaction.customer.firstName} ${transaction.customer.lastName}` : null,
+      items: transaction.items.length,
+      subtotal: Number(transaction.subtotal || 0),
+      tax: Number(transaction.tax || 0),
+      discount: Number(transaction.discount || 0),
       total: Number(transaction.total),
       paymentMethod: transaction.paymentMethod,
-      paymentStatus: transaction.paymentStatus,
       status: transaction.status,
+      // Additional fields for detailed view
+      paymentStatus: transaction.paymentStatus,
       createdAt: transaction.createdAt.toISOString(),
       customer: transaction.customer ? {
         name: `${transaction.customer.firstName} ${transaction.customer.lastName}`,
@@ -124,7 +132,7 @@ export async function GET(request: NextRequest) {
         name: `${transaction.user.firstName} ${transaction.user.lastName}`,
       },
       itemCount: transaction.items.length,
-      items: transaction.items.map(item => ({
+      itemDetails: transaction.items.map(item => ({
         productName: item.product.name,
         sku: item.product.sku,
         quantity: item.quantity,
