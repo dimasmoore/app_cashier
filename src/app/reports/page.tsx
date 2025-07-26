@@ -16,7 +16,7 @@ import {
   FiRefreshCw,
 } from "react-icons/fi";
 
-// Components
+
 import {
   ReportsSummaryCards,
   ReportsFilters,
@@ -29,7 +29,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import { validateDateRange, sanitizeSearchQuery } from "@/lib/validation";
 
-// Types
+
 import {
   ReportFilters,
   ReportType,
@@ -60,7 +60,7 @@ export default function ReportsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  // State management
+  
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingSales, setIsLoadingSales] = useState(true);
@@ -68,7 +68,7 @@ export default function ReportsPage() {
   const [salesError, setSalesError] = useState<string | null>(null);
   const [transactionsError, setTransactionsError] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(false);
-  const [refreshInterval, setRefreshInterval] = useState(30000); // 30 seconds
+  const [refreshInterval, setRefreshInterval] = useState(30000); 
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [filters, setFilters] = useState<ReportFilters>({
     dateRange: {
@@ -78,7 +78,7 @@ export default function ReportsPage() {
     reportType: "sales",
   });
 
-  // Mock data - In real app, this would come from API
+  
   const [reportMetrics, setReportMetrics] = useState<ReportMetric[]>([
     {
       id: "total-sales",
@@ -185,7 +185,7 @@ export default function ReportsPage() {
       { method: "Transfer Bank", count: 180, amount: 8000000, percentage: 18 },
       { method: "E-Wallet", count: 84, amount: 4000000, percentage: 7 },
     ],
-    // Add required new fields
+    
     lastUpdated: new Date().toISOString(),
     dateRange: {
       startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
@@ -194,7 +194,7 @@ export default function ReportsPage() {
     isRealTime: false,
   });
 
-  // Separate state for different data types
+  
   const [transactionData, setTransactionData] = useState<TransactionReportData[]>([
     {
       id: "1",
@@ -253,7 +253,7 @@ export default function ReportsPage() {
   const [inventoryData, setInventoryData] = useState<InventoryReportData[]>([]);
   const [customerData, setCustomerData] = useState<CustomerReportData[]>([]);
 
-  // API fetching functions
+  
   const fetchSalesData = useCallback(async () => {
     try {
       setIsLoadingSales(true);
@@ -274,13 +274,13 @@ export default function ReportsPage() {
       if (result.success) {
         setSalesData(result.data);
 
-        // Update report metrics based on sales data
+        
         const newMetrics: ReportMetric[] = [
           {
             id: "total-sales",
             title: "Total Penjualan",
             value: result.data.totalSales.toLocaleString(),
-            change: "+12.5%", // TODO: Calculate actual change
+            change: "+12.5%", 
             changeType: "increase",
             icon: FiShoppingCart,
             color: "bg-gradient-to-r from-blue-500 to-blue-600",
@@ -289,7 +289,7 @@ export default function ReportsPage() {
             id: "total-revenue",
             title: "Total Pendapatan",
             value: `Rp ${result.data.totalRevenue.toLocaleString()}`,
-            change: "+8.2%", // TODO: Calculate actual change
+            change: "+8.2%", 
             changeType: "increase",
             icon: FiDollarSign,
             color: "bg-gradient-to-r from-green-500 to-green-600",
@@ -298,7 +298,7 @@ export default function ReportsPage() {
             id: "total-transactions",
             title: "Total Transaksi",
             value: result.data.totalTransactions.toLocaleString(),
-            change: "+15.3%", // TODO: Calculate actual change
+            change: "+15.3%", 
             changeType: "increase",
             icon: FiBarChart,
             color: "bg-gradient-to-r from-purple-500 to-purple-600",
@@ -307,7 +307,7 @@ export default function ReportsPage() {
             id: "avg-order-value",
             title: "Rata-rata Nilai Order",
             value: `Rp ${Math.round(result.data.averageOrderValue).toLocaleString()}`,
-            change: "+5.1%", // TODO: Calculate actual change
+            change: "+5.1%", 
             changeType: "increase",
             icon: FiTrendingUp,
             color: "bg-gradient-to-r from-indigo-500 to-indigo-600",
@@ -356,7 +356,7 @@ export default function ReportsPage() {
     }
   }, [filters]);
 
-  // Fetch inventory data
+  
   const fetchInventoryData = useCallback(async () => {
     setIsLoadingTransactions(true);
     try {
@@ -389,7 +389,7 @@ export default function ReportsPage() {
     }
   }, [filters]);
 
-  // Fetch customer data
+  
   const fetchCustomerData = useCallback(async () => {
     setIsLoadingTransactions(true);
     try {
@@ -422,7 +422,7 @@ export default function ReportsPage() {
     }
   }, [filters]);
 
-  // Authentication check
+  
   useEffect(() => {
     if (status === "loading") return;
     if (!session) {
@@ -432,11 +432,11 @@ export default function ReportsPage() {
     setIsLoading(false);
   }, [session, status, router]);
 
-  // Fetch appropriate data based on report type
+  
   const fetchDataForReportType = useCallback(() => {
     if (!session || isLoading) return;
 
-    fetchSalesData(); // Always fetch sales data for metrics
+    fetchSalesData(); 
 
     switch (filters.reportType) {
       case 'transactions':
@@ -464,20 +464,20 @@ export default function ReportsPage() {
     fetchCustomerData
   ]);
 
-  // Fetch data when component mounts
+  
   useEffect(() => {
     fetchDataForReportType();
   }, [session, isLoading, fetchSalesData, fetchTransactionData, fetchInventoryData, fetchCustomerData]);
 
-  // Refresh data when filters change
+  
   useEffect(() => {
     fetchDataForReportType();
   }, [filters, fetchDataForReportType]);
 
-  // Handle filter changes
+  
   const handleFiltersChange = useCallback((newFilters: ReportFilters) => {
     try {
-      // Validate date range
+      
       validateDateRange(newFilters.dateRange.startDate, newFilters.dateRange.endDate);
       setFilters(newFilters);
       setSalesError(null);
@@ -491,7 +491,7 @@ export default function ReportsPage() {
 
 
 
-  // Get current table data based on report type
+  
   const getCurrentTableData = useCallback(() => {
     switch (filters.reportType) {
       case 'transactions':
@@ -507,7 +507,7 @@ export default function ReportsPage() {
     }
   }, [filters.reportType, transactionData, inventoryData, customerData]);
 
-  // Map report type to table type
+  
   const getTableType = useCallback((): 'transactions' | 'inventory' | 'customers' => {
     switch (filters.reportType) {
       case 'transactions':
@@ -523,7 +523,7 @@ export default function ReportsPage() {
     }
   }, [filters.reportType]);
 
-  // Get export data based on report type
+  
   const getExportData = useCallback(() => {
     const exportData = getCurrentTableData();
 
@@ -537,13 +537,13 @@ export default function ReportsPage() {
     return exportData;
   }, [filters.reportType, getCurrentTableData]);
 
-  // Handle export (kept for backward compatibility)
+  
   const handleExport = useCallback(async (format: ExportFormat) => {
     console.log(`Exporting ${filters.reportType} report as ${format}`);
-    // This is now handled by the ReportsExport component itself
+    
   }, [filters]);
 
-  // Handle refresh
+  
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
@@ -557,7 +557,7 @@ export default function ReportsPage() {
     }
   }, [fetchSalesData, fetchTransactionData]);
 
-  // Auto-refresh functionality
+  
   useEffect(() => {
     if (!autoRefresh || !session || isLoading) return;
 

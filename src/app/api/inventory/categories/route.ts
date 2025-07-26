@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check for duplicate name
+    
     const existing = await prisma.category.findFirst({
       where: { name },
     });

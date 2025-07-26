@@ -1,18 +1,18 @@
-// Simple in-memory cache for API responses
-// In production, consider using Redis or similar
+
+
 
 interface CacheEntry<T> {
   data: T;
   timestamp: number;
-  ttl: number; // Time to live in milliseconds
+  ttl: number; 
 }
 
 class MemoryCache {
   private cache = new Map<string, CacheEntry<any>>();
-  private maxSize = 100; // Maximum number of entries
+  private maxSize = 100; 
 
-  set<T>(key: string, data: T, ttlMs: number = 300000): void { // Default 5 minutes
-    // Remove oldest entries if cache is full
+  set<T>(key: string, data: T, ttlMs: number = 300000): void { 
+    
     if (this.cache.size >= this.maxSize) {
       const oldestKey = this.cache.keys().next().value;
       if (oldestKey) {
@@ -34,7 +34,7 @@ class MemoryCache {
       return null;
     }
 
-    // Check if entry has expired
+    
     if (Date.now() - entry.timestamp > entry.ttl) {
       this.cache.delete(key);
       return null;
@@ -51,7 +51,7 @@ class MemoryCache {
     this.cache.clear();
   }
 
-  // Clean up expired entries
+  
   cleanup(): void {
     const now = Date.now();
     for (const [key, entry] of this.cache.entries()) {
@@ -61,7 +61,7 @@ class MemoryCache {
     }
   }
 
-  // Get cache statistics
+  
   getStats() {
     return {
       size: this.cache.size,
@@ -71,10 +71,10 @@ class MemoryCache {
   }
 }
 
-// Create singleton instance
+
 export const cache = new MemoryCache();
 
-// Cache key generators
+
 export function generateSalesReportCacheKey(
   startDate: string,
   endDate: string,
@@ -103,7 +103,7 @@ export function generateTransactionsCacheKey(
   return `transactions:${startDate}:${endDate}:${params}`;
 }
 
-// Cache invalidation helpers
+
 export function invalidateSalesCache(): void {
   const keys = cache.getStats().keys;
   keys.forEach(key => {
@@ -127,16 +127,16 @@ export function invalidateAllReportsCache(): void {
   invalidateTransactionsCache();
 }
 
-// Cleanup expired entries every 10 minutes
-if (typeof window === 'undefined') { // Only run on server
+
+if (typeof window === 'undefined') { 
   setInterval(() => {
     cache.cleanup();
   }, 10 * 60 * 1000);
 }
 
-// Cache configuration
+
 export const CACHE_TTL = {
-  SALES_REPORT: 5 * 60 * 1000, // 5 minutes
-  TRANSACTIONS: 2 * 60 * 1000, // 2 minutes
-  DASHBOARD_STATS: 1 * 60 * 1000, // 1 minute
+  SALES_REPORT: 5 * 60 * 1000, 
+  TRANSACTIONS: 2 * 60 * 1000, 
+  DASHBOARD_STATS: 1 * 60 * 1000, 
 } as const;

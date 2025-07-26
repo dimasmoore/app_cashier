@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q") || "";
 
-    // If no query, return recent customers
+    
     if (!query.trim()) {
       const recentCustomers = await prisma.customer.findMany({
         where: {
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(recentCustomers);
     }
 
-    // Search customers by name, email, or phone
+    
     const customers = await prisma.customer.findMany({
       where: {
         isActive: true,
@@ -36,25 +36,21 @@ export async function GET(request: NextRequest) {
           {
             firstName: {
               contains: query,
-              mode: "insensitive",
             },
           },
           {
             lastName: {
               contains: query,
-              mode: "insensitive",
             },
           },
           {
             email: {
               contains: query,
-              mode: "insensitive",
             },
           },
           {
             phone: {
               contains: query,
-              mode: "insensitive",
             },
           },
         ],
@@ -67,7 +63,7 @@ export async function GET(request: NextRequest) {
           lastName: "asc",
         },
       ],
-      take: 20, // Limit results for performance
+      take: 20, 
     });
 
     return NextResponse.json(customers);

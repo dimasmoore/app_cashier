@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       notes,
     } = body;
 
-    // Validate required fields
+    
     if (!items || items.length === 0) {
       return NextResponse.json(
         { error: "Items are required" },
@@ -52,12 +52,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate transaction number
+    
     const transactionNumber = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
-    // Start transaction
+    
     const result = await prisma.$transaction(async (tx) => {
-      // Verify product availability and get product details
+      
       const productIds = items.map(item => item.productId);
       const products = await tx.product.findMany({
         where: {
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
         throw new Error("Some products not found or inactive");
       }
 
-      // Check stock availability
+      
       for (const item of items) {
         const product = products.find(p => p.id === item.productId);
         if (!product) {
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Create transaction
+      
       const transaction = await tx.transaction.create({
         data: {
           transactionNumber,
@@ -98,11 +98,11 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Create transaction items and update stock
+      
       for (const item of items) {
         const product = products.find(p => p.id === item.productId)!;
         
-        // Create transaction item
+        
         await tx.transactionItem.create({
           data: {
             transactionId: transaction.id,
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        // Update product stock
+        
         await tx.product.update({
           where: { id: item.productId },
           data: {
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        // Create stock movement record
+        
         await tx.stockMovement.create({
           data: {
             productId: item.productId,
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
       return transaction;
     });
 
-    // Fetch the complete transaction with items for response
+    
     const completeTransaction = await prisma.transaction.findUnique({
       where: { id: result.id },
       include: {
@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Format response
+    
     const response = {
       id: completeTransaction!.id,
       transactionNumber: completeTransaction!.transactionNumber,

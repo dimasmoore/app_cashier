@@ -17,12 +17,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json([]);
     }
 
-    // Search products by name, SKU, or barcode
+    
     const products = await prisma.product.findMany({
       where: {
         isActive: true,
         stock: {
-          gt: 0, // Only show products with stock
+          gt: 0, 
         },
         OR: [
           {
@@ -64,10 +64,10 @@ export async function GET(request: NextRequest) {
           name: "asc",
         },
       ],
-      take: 20, // Limit results for performance
+      take: 20, 
     });
 
-    // Format the response
+    
     const formattedProducts = products.map((product) => ({
       id: product.id,
       name: product.name,

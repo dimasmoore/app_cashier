@@ -92,9 +92,9 @@ export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  // Redirect to login if not authenticated
+  
   useEffect(() => {
-    if (status === "loading") return; // Still loading
+    if (status === "loading") return; 
 
     if (!session) {
       router.push("/");
@@ -102,7 +102,7 @@ export default function Dashboard() {
     }
   }, [session, status, router]);
 
-  // Fetch dashboard statistics
+  
   const fetchDashboardStats = async () => {
     try {
       setIsLoadingStats(true);
@@ -121,7 +121,7 @@ export default function Dashboard() {
     }
   };
 
-  // Fetch recent transactions
+  
   const fetchRecentTransactions = async () => {
     try {
       setIsLoadingTransactions(true);
@@ -140,7 +140,7 @@ export default function Dashboard() {
     }
   };
 
-  // Refresh all dashboard data
+  
   const refreshDashboardData = async () => {
     await Promise.all([
       fetchDashboardStats(),
@@ -148,7 +148,7 @@ export default function Dashboard() {
     ]);
   };
 
-  // Fix hydration error by only showing date/time on client side
+  
   useEffect(() => {
     setIsClient(true);
 
@@ -167,18 +167,18 @@ export default function Dashboard() {
     };
 
     updateDateTime();
-    const interval = setInterval(updateDateTime, 60000); // Update every minute
+    const interval = setInterval(updateDateTime, 60000); 
 
-    // Fetch dashboard data
+    
     if (session) {
       fetchDashboardStats();
       fetchRecentTransactions();
 
-      // Set up auto-refresh every 5 minutes
+      
       const refreshInterval = setInterval(() => {
         fetchDashboardStats();
         fetchRecentTransactions();
-      }, 5 * 60 * 1000); // 5 minutes
+      }, 5 * 60 * 1000); 
 
       return () => {
         clearInterval(interval);
@@ -191,10 +191,10 @@ export default function Dashboard() {
     };
   }, [session]);
 
-  // Generate dashboard metrics from dynamic data
+  
   const getDashboardMetrics = (): DashboardMetric[] => {
     if (!dashboardStats) {
-      // Return loading state metrics
+      
       return [
         {
           id: "daily-sales",
@@ -277,7 +277,7 @@ export default function Dashboard() {
 
   const dashboardMetrics = getDashboardMetrics();
 
-  // Show loading if session is still loading or user is not authenticated
+  
   if (status === "loading" || !session) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900 flex items-center justify-center">
@@ -490,7 +490,7 @@ export default function Dashboard() {
                 <CardContent>
                   <div className="space-y-4">
                     {isLoadingTransactions ? (
-                      // Loading state
+                      
                       Array.from({ length: 5 }).map((_, index) => (
                         <div
                           key={index}
@@ -510,7 +510,7 @@ export default function Dashboard() {
                         </div>
                       ))
                     ) : transactionsError ? (
-                      // Error state
+                      
                       <div className="text-center py-8">
                         <p className="text-red-500 dark:text-red-400 text-sm">
                           {transactionsError}
@@ -523,14 +523,14 @@ export default function Dashboard() {
                         </button>
                       </div>
                     ) : recentTransactions.length === 0 ? (
-                      // Empty state
+                      
                       <div className="text-center py-8">
                         <p className="text-gray-500 dark:text-gray-400 text-sm">
                           Belum ada transaksi hari ini
                         </p>
                       </div>
                     ) : (
-                      // Data state
+                      
                       recentTransactions.map((transaction) => (
                         <div
                           key={transaction.id}

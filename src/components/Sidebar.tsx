@@ -41,7 +41,7 @@ const Sidebar = memo(function Sidebar({
   const router = useRouter();
   const pathname = usePathname();
 
-  // Detect mobile screen size
+  
   useEffect(() => {
     const checkMobile = () => {
       const mobile = window.innerWidth < 768;
@@ -53,16 +53,16 @@ const Sidebar = memo(function Sidebar({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Handle navigation - memoized to prevent re-creation on every render
+  
   const handleNavigation = useCallback((item: NavigationItem) => {
     try {
-      // Call the onItemClick prop to update active state
+      
       onItemClick(item.id);
 
-      // Navigate to the route
+      
       router.push(item.href);
 
-      // Close sidebar on mobile after navigation
+      
       if (isMobile) {
         onToggle();
       }
@@ -71,7 +71,7 @@ const Sidebar = memo(function Sidebar({
     }
   }, [onItemClick, router, isMobile, onToggle]);
 
-  // Handle logout functionality - memoized to prevent re-creation
+  
   const handleLogout = useCallback(async () => {
     setIsLoggingOut(true);
     try {
@@ -85,13 +85,13 @@ const Sidebar = memo(function Sidebar({
     }
   }, []);
 
-  // Determine active item based on current pathname - memoized to prevent recalculation
+  
   const currentActiveItem = useMemo(() => {
     const matchingItem = navigationItems.find(item => item.href === pathname);
     return matchingItem?.id || activeItem;
   }, [pathname, navigationItems, activeItem]);
 
-  // Memoized animation variants to prevent object recreation
+  
   const sidebarAnimationProps = useMemo(() => ({
     initial: false,
     animate: {

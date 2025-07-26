@@ -130,7 +130,7 @@ export default function ReportsTable({
   const [showExportDropdown, setShowExportDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
+  
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -144,11 +144,11 @@ export default function ReportsTable({
     };
   }, []);
 
-  // Filter and sort data
+  
   const filteredAndSortedData = useMemo(() => {
     let filtered = [...data];
 
-    // Apply search filter
+    
     if (searchQuery) {
       filtered = filtered.filter((item) => {
         const searchableFields = Object.values(item).join(" ").toLowerCase();
@@ -156,7 +156,7 @@ export default function ReportsTable({
       });
     }
 
-    // Apply sorting
+    
     if (sortColumn) {
       filtered.sort((a, b) => {
         const aValue = (a as any)[sortColumn];
@@ -180,7 +180,7 @@ export default function ReportsTable({
     return filtered;
   }, [data, searchQuery, sortColumn, sortDirection]);
 
-  // Pagination
+  
   const totalPages = Math.ceil(filteredAndSortedData.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedData = filteredAndSortedData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
@@ -209,7 +209,7 @@ export default function ReportsTable({
     try {
       console.log('Starting export process...', { format, type, dataLength: filteredAndSortedData.length });
 
-      // Validate data
+      
       if (!filteredAndSortedData || filteredAndSortedData.length === 0) {
         throw new Error('Tidak ada data untuk diekspor');
       }
@@ -245,10 +245,10 @@ export default function ReportsTable({
 
       console.log('Export completed successfully');
 
-      // Show success state
+      
       setExportFormat(format);
 
-      // Reset export state after a short delay
+      
       setTimeout(() => {
         setIsExporting(false);
         setExportFormat(null);
@@ -256,7 +256,7 @@ export default function ReportsTable({
     } catch (error) {
       console.error('Export error:', error);
 
-      // Show error to user (you might want to add a toast notification here)
+      
       alert(`Gagal mengekspor data: ${error instanceof Error ? error.message : 'Terjadi kesalahan yang tidak diketahui'}`);
 
       setIsExporting(false);

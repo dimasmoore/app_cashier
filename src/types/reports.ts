@@ -1,6 +1,6 @@
-// ================================
-// REPORTS TYPE DEFINITIONS
-// ================================
+
+
+
 
 export interface ReportMetric {
   id: string;
@@ -46,7 +46,7 @@ export interface SalesReportData {
   salesByCategory: CategorySalesData[];
   salesTrend: SalesTrendData[];
   paymentMethodBreakdown: PaymentMethodData[];
-  // Additional metadata for dynamic updates
+  
   lastUpdated: string;
   dateRange: {
     startDate: string;
@@ -125,9 +125,9 @@ export interface CustomerReportData {
   status: "active" | "inactive";
 }
 
-// ================================
-// COMPONENT PROPS INTERFACES
-// ================================
+
+
+
 
 export interface ReportsSummaryCardsProps {
   metrics: ReportMetric[];
@@ -161,9 +161,9 @@ export interface ReportsExportProps {
   isExporting?: boolean;
 }
 
-// ================================
-// API RESPONSE INTERFACES
-// ================================
+
+
+
 
 export interface ReportsApiResponse<T = any> {
   success: boolean;
@@ -180,9 +180,9 @@ export interface InventoryReportApiResponse extends ReportsApiResponse<Inventory
 
 export interface CustomerReportApiResponse extends ReportsApiResponse<CustomerReportData[]> {}
 
-// ================================
-// CHART DATA INTERFACES
-// ================================
+
+
+
 
 export interface ChartDataPoint {
   label: string;
@@ -221,9 +221,9 @@ export interface PieChartData {
   }[];
 }
 
-// ================================
-// UTILITY TYPES
-// ================================
+
+
+
 
 export type SortDirection = "asc" | "desc";
 

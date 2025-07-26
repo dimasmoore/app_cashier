@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { firstName, lastName, email, phone, address, dateOfBirth } = body;
 
-    // Validate required fields
+    
     if (!firstName || !lastName) {
       return NextResponse.json(
         { error: "First name and last name are required" },
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check for duplicate email if provided
+    
     if (email) {
       const existingCustomer = await prisma.customer.findUnique({
         where: { email },
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create customer
+    
     const customer = await prisma.customer.create({
       data: {
         firstName,

@@ -28,7 +28,7 @@ import {
   FiChevronRight,
 } from "react-icons/fi";
 
-// Types
+
 interface Product {
   id: string;
   name: string;
@@ -57,7 +57,7 @@ interface Customer {
 }
 
 export default function SalesPage() {
-  // State management
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -82,7 +82,7 @@ export default function SalesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  // Redirect if not authenticated
+  
   useEffect(() => {
     if (status === "loading") return;
     if (!session) {
@@ -91,7 +91,7 @@ export default function SalesPage() {
     }
   }, [session, status, router]);
 
-  // Search products
+  
   const searchProducts = useCallback(async (query: string) => {
     if (!query.trim()) {
       setProducts([]);
@@ -112,7 +112,7 @@ export default function SalesPage() {
     }
   }, []);
 
-  // Fetch customers
+  
   const fetchCustomers = useCallback(async (query: string = "") => {
     try {
       const response = await fetch(`/api/sales/customers/search?q=${encodeURIComponent(query)}`);
@@ -125,14 +125,14 @@ export default function SalesPage() {
     }
   }, []);
 
-  // Load initial customers
+  
   useEffect(() => {
     if (session) {
       fetchCustomers();
     }
   }, [session, fetchCustomers]);
 
-  // Debounced search for products
+  
   useEffect(() => {
     const timer = setTimeout(() => {
       searchProducts(searchTerm);
@@ -141,7 +141,7 @@ export default function SalesPage() {
     return () => clearTimeout(timer);
   }, [searchTerm, searchProducts]);
 
-  // Debounced search for customers
+  
   useEffect(() => {
     const timer = setTimeout(() => {
       if (showCustomerModal) {
@@ -154,13 +154,13 @@ export default function SalesPage() {
 
 
 
-  // Cart calculations
+  
   const cartSubtotal = cartItems.reduce((sum, item) => sum + item.subtotal, 0);
-  const taxRate = 0.1; // 10% tax
+  const taxRate = 0.1; 
   const taxAmount = cartSubtotal * taxRate;
   const cartTotal = cartSubtotal + taxAmount;
 
-  // Cart management functions
+  
   const addToCart = (product: Product) => {
     setCartItems(prev => {
       const existingItem = prev.find(item => item.product.id === product.id);
@@ -213,7 +213,7 @@ export default function SalesPage() {
     setSelectedCustomer(null);
   };
 
-  // Process transaction
+  
   const processTransaction = async () => {
     if (cartItems.length === 0) return;
 
@@ -259,7 +259,7 @@ export default function SalesPage() {
     }
   };
 
-  // Create new customer
+  
   const createNewCustomer = async () => {
     if (!newCustomerData.firstName || !newCustomerData.lastName) {
       alert("Nama depan dan belakang harus diisi");
@@ -300,7 +300,7 @@ export default function SalesPage() {
     }
   };
 
-  // Barcode scanning
+  
   const handleBarcodeInput = async () => {
     const barcode = prompt("Masukkan atau scan barcode:");
     if (!barcode) return;
@@ -312,7 +312,7 @@ export default function SalesPage() {
       if (response.ok) {
         const product = await response.json();
         addToCart(product);
-        // Clear search and show the found product
+        
         setSearchTerm("");
         setProducts([product]);
       } else {
@@ -327,7 +327,7 @@ export default function SalesPage() {
     }
   };
 
-  // Generate and print receipt
+  
   const printReceipt = () => {
     if (!transactionResult) return;
 
@@ -361,7 +361,7 @@ export default function SalesPage() {
       ========================================
     `;
 
-    // Create a new window for printing
+    
     const printWindow = window.open('', '_blank');
     if (printWindow) {
       printWindow.document.write(`
@@ -388,35 +388,35 @@ export default function SalesPage() {
     }
   };
 
-  // Keyboard shortcuts
+  
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // F1 - Focus search
+      
       if (event.key === "F1") {
         event.preventDefault();
         const searchInput = document.querySelector('input[placeholder*="Cari produk"]') as HTMLInputElement;
         searchInput?.focus();
       }
 
-      // F2 - Barcode scan
+      
       if (event.key === "F2") {
         event.preventDefault();
         handleBarcodeInput();
       }
 
-      // F3 - Customer selection
+      
       if (event.key === "F3" && cartItems.length > 0) {
         event.preventDefault();
         setShowCustomerModal(true);
       }
 
-      // F4 - Payment
+      
       if (event.key === "F4" && cartItems.length > 0) {
         event.preventDefault();
         setShowPaymentModal(true);
       }
 
-      // Escape - Close modals
+      
       if (event.key === "Escape") {
         setShowCustomerModal(false);
         setShowPaymentModal(false);
@@ -428,7 +428,7 @@ export default function SalesPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [cartItems.length]);
 
-  // Show loading if session is still loading
+  
   if (status === "loading" || !session) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900 flex items-center justify-center">

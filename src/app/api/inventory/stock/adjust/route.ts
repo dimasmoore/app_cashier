@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get current product
+    
     const product = await prisma.product.findUnique({
       where: { id: productId },
     });
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Calculate new stock
+    
     let newStock = product.stock;
     const adjustmentQuantity = parseInt(quantity);
 
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
         newStock -= adjustmentQuantity;
         break;
       case "ADJUSTMENT":
-        newStock = adjustmentQuantity; // Set to exact amount
+        newStock = adjustmentQuantity; 
         break;
       default:
         return NextResponse.json(
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
         );
     }
 
-    // Ensure stock doesn't go negative
+    
     if (newStock < 0) {
       return NextResponse.json(
         { error: "Stok tidak boleh kurang dari 0" },
@@ -61,9 +61,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update product stock and create stock movement in a transaction
+    
     const result = await prisma.$transaction(async (tx) => {
-      // Update product stock
+      
       const updatedProduct = await tx.product.update({
         where: { id: productId },
         data: { stock: newStock },
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Create stock movement record
+      
       const stockMovement = await tx.stockMovement.create({
         data: {
           type,

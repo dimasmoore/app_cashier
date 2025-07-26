@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get current date and yesterday's date for comparison
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    // Fetch today's sales data
+    
     const todayTransactions = await prisma.transaction.findMany({
       where: {
         createdAt: {
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Fetch yesterday's sales data for comparison
+    
     const yesterdayTransactions = await prisma.transaction.findMany({
       where: {
         createdAt: {
@@ -50,33 +50,33 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Calculate today's sales
+    
     const todaySales = todayTransactions.reduce(
       (sum, transaction) => sum + Number(transaction.total),
       0
     );
 
-    // Calculate yesterday's sales
+    
     const yesterdaySales = yesterdayTransactions.reduce(
       (sum, transaction) => sum + Number(transaction.total),
       0
     );
 
-    // Calculate sales percentage change
+    
     const salesChange = yesterdaySales > 0 
       ? ((todaySales - yesterdaySales) / yesterdaySales) * 100 
       : todaySales > 0 ? 100 : 0;
 
-    // Get transaction counts
+    
     const todayTransactionCount = todayTransactions.length;
     const yesterdayTransactionCount = yesterdayTransactions.length;
 
-    // Calculate transaction percentage change
+    
     const transactionChange = yesterdayTransactionCount > 0 
       ? ((todayTransactionCount - yesterdayTransactionCount) / yesterdayTransactionCount) * 100 
       : todayTransactionCount > 0 ? 100 : 0;
 
-    // Get active customers (customers who made transactions in the last 30 days)
+    
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -110,12 +110,12 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Calculate customer percentage change
+    
     const customerChange = activeCustomersYesterday > 0 
       ? ((activeCustomersToday - activeCustomersYesterday) / activeCustomersYesterday) * 100 
       : activeCustomersToday > 0 ? 100 : 0;
 
-    // Get total product stock
+    
     const totalStock = await prisma.product.aggregate({
       where: {
         isActive: true,
@@ -125,8 +125,8 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Get yesterday's total stock for comparison
-    // Since we don't have historical stock data, we'll calculate based on stock movements
+    
+    
     const stockMovementsToday = await prisma.stockMovement.findMany({
       where: {
         createdAt: {
@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Calculate stock change based on today's movements
+    
     let stockChangeQuantity = 0;
     stockMovementsToday.forEach(movement => {
       if (movement.type === "IN") {
@@ -153,12 +153,12 @@ export async function GET(request: NextRequest) {
     const currentTotalStock = totalStock._sum.stock || 0;
     const previousTotalStock = currentTotalStock - stockChangeQuantity;
     
-    // Calculate stock percentage change
+    
     const stockChange = previousTotalStock > 0 
       ? (stockChangeQuantity / previousTotalStock) * 100 
       : stockChangeQuantity > 0 ? 100 : 0;
 
-    // Format the response
+    
     const dashboardStats = {
       dailySales: {
         value: todaySales,

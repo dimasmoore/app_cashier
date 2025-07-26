@@ -32,7 +32,7 @@ export default function SidebarPerformanceMonitor({
   const pathname = usePathname();
   const previousPathname = useRef<string>(pathname);
 
-  // Track renders
+  
   useEffect(() => {
     if (!enabled) return;
 
@@ -42,7 +42,7 @@ export default function SidebarPerformanceMonitor({
       const renderTime = performance.now() - renderStartTime.current;
       renderTimes.current.push(renderTime);
       
-      // Keep only last 10 render times for average calculation
+      
       if (renderTimes.current.length > 10) {
         renderTimes.current = renderTimes.current.slice(-10);
       }
@@ -64,7 +64,7 @@ export default function SidebarPerformanceMonitor({
     };
   });
 
-  // Track navigation changes
+  
   useEffect(() => {
     if (!enabled) return;
 
@@ -77,7 +77,7 @@ export default function SidebarPerformanceMonitor({
     }
   }, [pathname, enabled]);
 
-  // Log metrics to console in development
+  
   useEffect(() => {
     if (!enabled || !console.group) return;
 
@@ -113,7 +113,7 @@ export default function SidebarPerformanceMonitor({
   );
 }
 
-// Hook for accessing performance metrics
+
 export function useSidebarPerformanceMetrics() {
   const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
 
@@ -123,9 +123,9 @@ export function useSidebarPerformanceMetrics() {
   };
 }
 
-// Performance test utilities
+
 export const SidebarPerformanceUtils = {
-  // Measure render performance
+  
   measureRender: (componentName: string, renderFn: () => void) => {
     const start = performance.now();
     renderFn();
@@ -133,7 +133,7 @@ export const SidebarPerformanceUtils = {
     console.log(`🎯 ${componentName} render time: ${(end - start).toFixed(2)}ms`);
   },
 
-  // Memory usage snapshot
+  
   getMemorySnapshot: () => {
     if (!(performance as any).memory) {
       return null;
@@ -149,7 +149,7 @@ export const SidebarPerformanceUtils = {
     };
   },
 
-  // Navigation performance test
+  
   testNavigationPerformance: async (routes: string[], iterations: number = 5) => {
     const results: Array<{ route: string; time: number }> = [];
     
@@ -157,10 +157,10 @@ export const SidebarPerformanceUtils = {
       for (const route of routes) {
         const start = performance.now();
         
-        // Simulate navigation
+        
         window.history.pushState({}, '', route);
         
-        // Wait for next tick
+        
         await new Promise(resolve => setTimeout(resolve, 0));
         
         const end = performance.now();
@@ -172,7 +172,7 @@ export const SidebarPerformanceUtils = {
     return results;
   },
 
-  // Render count tracker
+  
   createRenderTracker: (componentName: string) => {
     let renderCount = 0;
     

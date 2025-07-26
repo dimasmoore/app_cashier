@@ -69,7 +69,7 @@ export async function PUT(
       supplierId,
     } = body;
 
-    // Check if product exists
+    
     const existingProduct = await prisma.product.findUnique({
       where: { id: params.id },
     });
@@ -78,7 +78,7 @@ export async function PUT(
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    // Check for duplicate SKU or barcode (excluding current product)
+    
     const duplicate = await prisma.product.findFirst({
       where: {
         AND: [
@@ -121,7 +121,7 @@ export async function PUT(
       },
     });
 
-    // Create stock movement if stock changed
+    
     const stockDifference = parseInt(stock) - existingProduct.stock;
     if (stockDifference !== 0) {
       await prisma.stockMovement.create({
@@ -155,7 +155,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Soft delete by setting isActive to false
+    
     const product = await prisma.product.update({
       where: { id: params.id },
       data: { isActive: false },

@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     const paymentMethod = searchParams.get("paymentMethod");
     const status = searchParams.get("status");
 
-    // Validate pagination parameters
+    
     if (page < 1 || limit < 1 || limit > 100) {
       return NextResponse.json(
         { error: "Invalid pagination parameters" },
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Parse and validate date range
+    
     const start = startDate ? new Date(startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const end = endDate ? new Date(endDate) : new Date();
 
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
 
     end.setHours(23, 59, 59, 999);
 
-    // Build where clause
+    
     const where: any = {
       createdAt: {
         gte: start,
@@ -69,10 +69,10 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    // Get total count for pagination
+    
     const totalCount = await prisma.transaction.count({ where });
 
-    // Get transactions with pagination
+    
     const transactions = await prisma.transaction.findMany({
       where,
       include: {
@@ -108,21 +108,21 @@ export async function GET(request: NextRequest) {
       take: limit,
     });
 
-    // Format transaction data
+    
     const formattedTransactions = transactions.map(transaction => ({
       id: transaction.id,
       transactionNumber: transaction.transactionNumber,
-      date: transaction.createdAt.toISOString(), // Map createdAt to date for consistency
+      date: transaction.createdAt.toISOString(), 
       customerName: transaction.customer ?
         `${transaction.customer.firstName} ${transaction.customer.lastName}` : null,
       items: transaction.items.length,
       subtotal: Number(transaction.subtotal || 0),
-      tax: Number(transaction.tax || 0),
-      discount: Number(transaction.discount || 0),
+      tax: Number(transaction.taxAmount || 0),
+      discount: Number(transaction.discountAmount || 0),
       total: Number(transaction.total),
       paymentMethod: transaction.paymentMethod,
       status: transaction.status,
-      // Additional fields for detailed view
+      
       paymentStatus: transaction.paymentStatus,
       createdAt: transaction.createdAt.toISOString(),
       customer: transaction.customer ? {

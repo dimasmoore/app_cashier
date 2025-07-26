@@ -74,16 +74,16 @@ export default function ReportsExport({
     status: "idle",
   });
 
-  // Debug logging
+  
   console.log('ReportsExport component props:', {
     reportType,
     dataLength: data?.length || 0,
     hasOnExport: !!onExport,
     isExporting,
-    data: data?.slice(0, 2) // Log first 2 items for debugging
+    data: data?.slice(0, 2) 
   });
 
-  // Browser compatibility check
+  
   const checkBrowserSupport = () => {
     const hasBlob = typeof Blob !== 'undefined';
     const hasURL = typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function';
@@ -99,7 +99,7 @@ export default function ReportsExport({
     return hasBlob && hasURL && hasDownload;
   };
 
-  // Check browser support on component mount
+  
   useEffect(() => {
     const isSupported = checkBrowserSupport();
     if (!isSupported) {
@@ -118,12 +118,12 @@ export default function ReportsExport({
     });
 
     try {
-      // Always use built-in export functionality for better control
-      // The onExport prop is now just for backward compatibility/notifications
+      
+      
       console.log('Using built-in export functionality');
       await performExport(format);
 
-      // If onExport prop is provided, call it for notifications (but don't await it)
+      
       if (onExport) {
         console.log('Calling onExport prop for notifications');
         onExport(format).catch(err => console.warn('onExport prop failed:', err));
@@ -135,7 +135,7 @@ export default function ReportsExport({
         message: `Laporan berhasil diekspor ke format ${format.toUpperCase()}`,
       });
 
-      // Reset status after 3 seconds
+      
       setTimeout(() => {
         setExportState({ format: null, status: "idle" });
       }, 3000);
@@ -147,7 +147,7 @@ export default function ReportsExport({
         message: `Gagal mengekspor laporan: ${error instanceof Error ? error.message : "Unknown error"}`,
       });
 
-      // Reset status after 5 seconds
+      
       setTimeout(() => {
         setExportState({ format: null, status: "idle" });
       }, 5000);
@@ -163,7 +163,7 @@ export default function ReportsExport({
       firstItem: data?.[0]
     });
 
-    // Enhanced data validation
+    
     if (!data) {
       console.error('No data provided to performExport');
       throw new Error('Tidak ada data yang tersedia untuk diekspor');
@@ -180,7 +180,7 @@ export default function ReportsExport({
       throw new Error(`Tidak ada data ${reportTypeLabel.toLowerCase()} untuk diekspor. Silakan periksa filter tanggal atau tambahkan data terlebih dahulu.`);
     }
 
-    // Map report type to export type
+    
     const exportType = getExportType(reportType);
     console.log('Mapped export type:', exportType);
 
@@ -240,7 +240,7 @@ export default function ReportsExport({
       case 'customers':
         return 'customers';
       default:
-        return 'transactions'; // Default fallback
+        return 'transactions'; 
     }
   };
 

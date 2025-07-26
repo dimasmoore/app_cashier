@@ -14,7 +14,7 @@ interface ExportOptions {
   subtitle?: string;
 }
 
-// PDF Export Functions
+
 export const exportToPDF = async (
   data: ExportData,
   type: ExportType,
@@ -26,25 +26,25 @@ export const exportToPDF = async (
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.width;
 
-    // Set title
+    
     const title = options.title || getDefaultTitle(type);
     const subtitle = options.subtitle || `Diekspor pada ${formatDate(new Date())}`;
 
-    // Add title
+    
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
     doc.text(title, pageWidth / 2, 20, { align: 'center' });
 
-    // Add subtitle
+    
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
     doc.text(subtitle, pageWidth / 2, 30, { align: 'center' });
 
-    // Prepare table data based on type
+    
     const { headers, rows } = prepareTableData(data, type);
     console.log('PDF table data prepared:', { headers, rowCount: rows.length });
 
-    // Add table
+    
     autoTable(doc, {
       head: [headers],
       body: rows,
@@ -54,7 +54,7 @@ export const exportToPDF = async (
         cellPadding: 3,
       },
       headStyles: {
-        fillColor: [59, 130, 246], // Blue color
+        fillColor: [59, 130, 246], 
         textColor: 255,
         fontStyle: 'bold',
       },
@@ -64,7 +64,7 @@ export const exportToPDF = async (
       margin: { top: 40, right: 14, bottom: 20, left: 14 },
     });
 
-    // Add footer
+    
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
@@ -77,7 +77,7 @@ export const exportToPDF = async (
       );
     }
 
-    // Save the PDF
+    
     const filename = options.filename || `laporan-${type}-${Date.now()}.pdf`;
     console.log('Saving PDF:', filename);
 
@@ -86,7 +86,7 @@ export const exportToPDF = async (
       console.log('PDF export completed successfully');
     } catch (saveError) {
       console.warn('Direct PDF save failed, trying alternative method:', saveError);
-      // Alternative method: create blob and use saveAs
+      
       const pdfBlob = doc.output('blob');
       saveAs(pdfBlob, filename);
       console.log('PDF export completed using alternative method');
@@ -97,7 +97,7 @@ export const exportToPDF = async (
   }
 };
 
-// Excel Export Functions
+
 export const exportToExcel = async (
   data: ExportData,
   type: ExportType,
@@ -109,40 +109,40 @@ export const exportToExcel = async (
     const { headers, rows } = prepareTableData(data, type);
     console.log('Excel table data prepared:', { headers, rowCount: rows.length });
 
-    // Create workbook and worksheet
+    
     const wb = XLSX.utils.book_new();
     const wsData = [headers, ...rows];
     const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-    // Set column widths
+    
     const colWidths = getColumnWidths(type);
     ws['!cols'] = colWidths;
 
-    // Style the header row (simplified for compatibility)
+    
     const headerRange = XLSX.utils.decode_range(ws['!ref'] || 'A1');
     for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
       const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
       if (!ws[cellAddress]) continue;
 
-      // Simplified styling for better compatibility
+      
       ws[cellAddress].s = {
         font: { bold: true },
         alignment: { horizontal: 'center' },
       };
     }
 
-    // Add worksheet to workbook
+    
     const sheetName = getSheetName(type);
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
-    // Generate Excel file
+    
     console.log('Generating Excel buffer...');
     const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     const blob = new Blob([excelBuffer], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     });
 
-    // Save the file
+    
     const filename = options.filename || `laporan-${type}-${Date.now()}.xlsx`;
     console.log('Saving Excel file:', filename);
 
@@ -151,7 +151,7 @@ export const exportToExcel = async (
       console.log('Excel export completed successfully');
     } catch (saveError) {
       console.error('Excel file save failed:', saveError);
-      // Try creating a download link as fallback
+      
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -168,7 +168,7 @@ export const exportToExcel = async (
   }
 };
 
-// CSV Export Functions
+
 export const exportToCSV = async (
   data: ExportData,
   type: ExportType,
@@ -180,7 +180,7 @@ export const exportToCSV = async (
     const { headers, rows } = prepareTableData(data, type);
     console.log('CSV table data prepared:', { headers, rowCount: rows.length });
 
-    // Create CSV content with proper escaping
+    
     const csvContent = [
       headers.map(header => `"${String(header).replace(/"/g, '""')}"`).join(','),
       ...rows.map(row =>
@@ -193,11 +193,11 @@ export const exportToCSV = async (
 
     console.log('CSV content generated, length:', csvContent.length);
 
-    // Add BOM for proper UTF-8 encoding in Excel
+    
     const BOM = '\uFEFF';
     const csvWithBOM = BOM + csvContent;
 
-    // Create blob and save
+    
     const blob = new Blob([csvWithBOM], { type: 'text/csv;charset=utf-8;' });
     const filename = options.filename || `laporan-${type}-${Date.now()}.csv`;
     console.log('Saving CSV file:', filename);
@@ -207,7 +207,7 @@ export const exportToCSV = async (
       console.log('CSV export completed successfully');
     } catch (saveError) {
       console.error('CSV file save failed:', saveError);
-      // Try creating a download link as fallback
+      
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -224,7 +224,7 @@ export const exportToCSV = async (
   }
 };
 
-// Helper Functions
+
 const getDefaultTitle = (type: ExportType): string => {
   switch (type) {
     case 'transactions':
@@ -363,30 +363,30 @@ const getColumnWidths = (type: ExportType) => {
   switch (type) {
     case 'transactions':
       return [
-        { wch: 20 }, // No. Transaksi
-        { wch: 15 }, // Tanggal
-        { wch: 20 }, // Pelanggan
-        { wch: 15 }, // Total
-        { wch: 18 }, // Metode Pembayaran
-        { wch: 12 }, // Status
+        { wch: 20 }, 
+        { wch: 15 }, 
+        { wch: 20 }, 
+        { wch: 15 }, 
+        { wch: 18 }, 
+        { wch: 12 }, 
       ];
     case 'inventory':
       return [
-        { wch: 25 }, // Nama Produk
-        { wch: 15 }, // SKU
-        { wch: 15 }, // Kategori
-        { wch: 12 }, // Stok
-        { wch: 15 }, // Nilai
-        { wch: 12 }, // Status
+        { wch: 25 }, 
+        { wch: 15 }, 
+        { wch: 15 }, 
+        { wch: 12 }, 
+        { wch: 15 }, 
+        { wch: 12 }, 
       ];
     case 'customers':
       return [
-        { wch: 20 }, // Nama
-        { wch: 25 }, // Email
-        { wch: 15 }, // Telepon
-        { wch: 12 }, // Total Order
-        { wch: 15 }, // Total Belanja
-        { wch: 12 }, // Status
+        { wch: 20 }, 
+        { wch: 25 }, 
+        { wch: 15 }, 
+        { wch: 12 }, 
+        { wch: 15 }, 
+        { wch: 12 }, 
       ];
     default:
       return [];

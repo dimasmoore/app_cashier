@@ -36,9 +36,9 @@ export default function CashierLogin() {
   const router = useRouter();
   const { data: session, status } = useSession();
 
-  // Check if user is already authenticated
+  
   useEffect(() => {
-    if (status === "loading") return; // Still loading
+    if (status === "loading") return; 
 
     if (session) {
       router.push("/Dashboard");
@@ -65,7 +65,7 @@ export default function CashierLogin() {
       if (result?.error) {
         setError(result.error);
       } else if (result?.ok) {
-        // Successful login - NextAuth will handle redirect via callback
+        
         router.push("/Dashboard");
       }
     } catch (err) {
@@ -76,7 +76,7 @@ export default function CashierLogin() {
     }
   };
 
-  // Show loading spinner while checking session
+  
   if (isCheckingSession) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900 flex items-center justify-center">
@@ -325,7 +325,7 @@ export default function CashierLogin() {
         animate="visible"
         className="relative z-10 text-center py-6 text-sm text-gray-500 dark:text-gray-400"
       >
-        <p>© 2024 Sistem POS. Semua hak dilindungi.</p>
+        <p>© 2025 Sistem POS. Semua hak dilindungi.</p>
         <p className="mt-1">Butuh bantuan? Hubungi Dukungan IT</p>
       </motion.div>
     </div>

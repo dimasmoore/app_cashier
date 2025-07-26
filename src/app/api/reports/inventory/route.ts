@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get("endDate");
     const status = searchParams.get("status");
 
-    // Build where clause
+    
     const where: any = {};
 
     if (startDate && endDate) {
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (status && status !== "all") {
-      // Map status values
+      
       const statusMap: { [key: string]: string } = {
         'in_stock': 'IN_STOCK',
         'low_stock': 'LOW_STOCK',
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       where.status = statusMap[status] || status.toUpperCase();
     }
 
-    // Fetch products for inventory report
+    
     const products = await prisma.product.findMany({
       where,
       include: {
@@ -50,9 +50,9 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Format inventory data
+    
     const formattedInventory = products.map(product => {
-      // Calculate stock status
+      
       let stockStatus = 'in_stock';
       if (product.stock === 0) {
         stockStatus = 'out_of_stock';
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
         value: Number(product.price) * product.stock,
         status: stockStatus,
         lastUpdated: product.updatedAt.toISOString(),
-        // Additional fields for detailed view
+        
         price: Number(product.price),
         description: product.description,
         categoryId: product.categoryId,

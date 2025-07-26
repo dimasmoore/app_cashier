@@ -48,5 +48,5 @@ export function useLogout(onError?: (error: Error) => void) {
   return { logout, isLoggingOut };
 }
 
-// For direct import in components that don't need the hook
+
 export { signOut } from "next-auth/react";

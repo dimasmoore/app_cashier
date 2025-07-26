@@ -10,13 +10,12 @@ interface LoadingSkeletonProps {
 
 const shimmer = {
   hidden: { opacity: 0.3 },
-  visible: { 
+  visible: {
     opacity: 1,
     transition: {
       repeat: Infinity,
       repeatType: "reverse" as const,
-      duration: 1.5,
-      ease: "easeInOut"
+      duration: 1.5
     }
   }
 };
@@ -153,7 +152,7 @@ export default function LoadingSkeleton({
           </div>
         );
 
-      default: // card
+      default: 
         return (
           <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-0 shadow-lg rounded-lg p-6">
             <motion.div 

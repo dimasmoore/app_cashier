@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get("endDate");
     const status = searchParams.get("status");
 
-    // Build where clause for customers
+    
     const where: any = {};
 
     if (startDate && endDate) {
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       where.status = status.toUpperCase();
     }
 
-    // Fetch customers with their transaction data
+    
     const customers = await prisma.customer.findMany({
       where,
       include: {
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Format customer data
+    
     const formattedCustomers = customers.map(customer => {
       const completedTransactions = customer.transactions.filter(
         t => t.status === 'COMPLETED'
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
         ? Math.max(...completedTransactions.map(t => new Date(t.createdAt).getTime()))
         : null;
 
-      // Determine customer status based on activity
+      
       let customerStatus = 'active';
       if (completedTransactions.length === 0) {
         customerStatus = 'inactive';
@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
         totalSpent: totalSpent,
         lastOrderDate: lastOrderDate ? new Date(lastOrderDate).toISOString() : null,
         status: customerStatus,
-        // Additional fields for detailed view
+        
         firstName: customer.firstName,
         lastName: customer.lastName,
         address: customer.address,

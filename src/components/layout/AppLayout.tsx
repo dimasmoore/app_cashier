@@ -20,7 +20,7 @@ interface AppLayoutProps {
   children: React.ReactNode;
 }
 
-// Define routes that should show the sidebar
+
 const SIDEBAR_ROUTES = [
   "/Dashboard",
   "/Inventory",
@@ -30,7 +30,7 @@ const SIDEBAR_ROUTES = [
   "/settings",
 ];
 
-// Define routes that should not show the sidebar
+
 const NO_SIDEBAR_ROUTES = [
   "/",
   "/login",
@@ -48,24 +48,24 @@ const AppLayout = memo(function AppLayout({ children }: AppLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Determine if current route should show sidebar
+  
   const shouldShowSidebar = useMemo(() => {
-    // Don't show sidebar if not authenticated
+    
     if (status === "loading" || !session) {
       return false;
     }
 
-    // Don't show sidebar on excluded routes
+    
     if (NO_SIDEBAR_ROUTES.includes(pathname)) {
       return false;
     }
 
-    // Show sidebar on included routes or any protected route
+    
     return SIDEBAR_ROUTES.some(route => pathname.startsWith(route)) || 
            !NO_SIDEBAR_ROUTES.includes(pathname);
   }, [pathname, session, status]);
 
-  // Navigation items configuration
+  
   const navigationItems: NavigationItem[] = useMemo(() => [
     { id: "dashboard", label: "Dasbor", icon: FiHome, href: "/Dashboard" },
     { id: "sales", label: "Penjualan", icon: FiShoppingCart, href: "/sales" },
@@ -75,7 +75,7 @@ const AppLayout = memo(function AppLayout({ children }: AppLayoutProps) {
     { id: "settings", label: "Pengaturan", icon: FiSettings, href: "/settings" },
   ], []);
 
-  // Detect mobile screen size and initialize sidebar state
+  
   useEffect(() => {
     const checkMobile = () => {
       const mobile = window.innerWidth < 768;
@@ -92,7 +92,7 @@ const AppLayout = memo(function AppLayout({ children }: AppLayoutProps) {
     return () => window.removeEventListener('resize', checkMobile);
   }, [isInitialized]);
 
-  // Update active item based on current pathname
+  
   useEffect(() => {
     const matchingItem = navigationItems.find(item => item.href === pathname);
     if (matchingItem) {
@@ -100,7 +100,7 @@ const AppLayout = memo(function AppLayout({ children }: AppLayoutProps) {
     }
   }, [pathname, navigationItems]);
 
-  // Sidebar toggle handlers
+  
   const toggleSidebar = useCallback(() => {
     setSidebarOpen(prev => !prev);
   }, []);
@@ -123,14 +123,14 @@ const AppLayout = memo(function AppLayout({ children }: AppLayoutProps) {
     }
   }, [isMobile]);
 
-  // Memoized layout styles to prevent recalculation
+  
   const layoutStyles = useMemo(() => ({
     marginLeft: shouldShowSidebar 
       ? (isMobile ? "0px" : (sidebarOpen ? "280px" : "80px"))
       : "0px",
   }), [shouldShowSidebar, isMobile, sidebarOpen]);
 
-  // If we're on a route that doesn't need sidebar, render children directly
+  
   if (!shouldShowSidebar) {
     return <>{children}</>;
   }

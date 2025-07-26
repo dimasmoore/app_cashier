@@ -10,14 +10,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get today's date range
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // Fetch recent transactions from today
+    
     const recentTransactions = await prisma.transaction.findMany({
       where: {
         createdAt: {
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
       take: 5,
     });
 
-    // Format the transactions for the frontend
+    
     const formattedTransactions = recentTransactions.map((transaction) => ({
       id: transaction.id,
       transactionNumber: transaction.transactionNumber,

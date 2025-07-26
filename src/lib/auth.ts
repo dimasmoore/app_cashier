@@ -19,7 +19,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          // Find user by email
+          
           const user = await prisma.user.findUnique({
             where: {
               email: credentials.email.toLowerCase(),
@@ -34,7 +34,7 @@ export const authOptions: NextAuthOptions = {
             throw new Error("Akun Anda tidak aktif. Hubungi administrator");
           }
 
-          // Verify password
+          
           const isPasswordValid = await bcrypt.compare(
             credentials.password,
             user.password
@@ -44,7 +44,7 @@ export const authOptions: NextAuthOptions = {
             throw new Error("Email atau password tidak valid");
           }
 
-          // Return user object
+          
           return {
             id: user.id,
             email: user.email,
@@ -63,10 +63,10 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: "jwt",
-    maxAge: 24 * 60 * 60, // 24 hours
+    maxAge: 24 * 60 * 60, 
   },
   jwt: {
-    maxAge: 24 * 60 * 60, // 24 hours
+    maxAge: 24 * 60 * 60, 
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -90,7 +90,7 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // Redirect to dashboard after successful login
+      
       if (url.startsWith("/")) return `${baseUrl}${url}`;
       else if (new URL(url).origin === baseUrl) return url;
       return `${baseUrl}/Dashboard`;

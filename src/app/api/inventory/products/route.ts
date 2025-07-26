@@ -20,14 +20,14 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    // Build where clause
+    
     const where: any = {
       isActive: true,
     };
 
     if (search) {
-      // MySQL-compatible case-insensitive search using LIKE operator
-      // Note: MySQL's LIKE operator is case-insensitive by default with utf8_general_ci collation
+      
+      
       where.OR = [
         { name: { contains: search } },
         { sku: { contains: search } },
@@ -43,13 +43,13 @@ export async function GET(request: NextRequest) {
       where.supplierId = supplierId;
     }
 
-    // Note: Low stock filtering will be handled in application logic after fetching
-    // since Prisma doesn't support comparing two fields directly in MySQL
+    
+    
     if (stockStatus === "out") {
       where.stock = { lte: 0 };
     }
 
-    // Fetch products first
+    
     let allProducts = await prisma.product.findMany({
       where,
       include: {
@@ -64,14 +64,14 @@ export async function GET(request: NextRequest) {
       orderBy: { updatedAt: "desc" },
     });
 
-    // Apply low stock filtering in application logic if needed
+    
     if (stockStatus === "low") {
       allProducts = allProducts.filter(product =>
         product.stock > 0 && product.stock <= product.minStock
       );
     }
 
-    // Calculate pagination after filtering
+    
     const total = allProducts.length;
     const products = allProducts.slice(skip, skip + limit);
 
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
       supplierId,
     } = body;
 
-    // Validate required fields
+    
     if (!name || !sku || !price || !categoryId) {
       return NextResponse.json(
         { error: "Missing required fields" },
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check for duplicate SKU or barcode
+    
     const existing = await prisma.product.findFirst({
       where: {
         OR: [
@@ -160,7 +160,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Create initial stock movement
+    
     if (parseInt(stock) > 0) {
       await prisma.stockMovement.create({
         data: {

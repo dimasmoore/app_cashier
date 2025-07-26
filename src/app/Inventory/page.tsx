@@ -91,7 +91,7 @@ export default function InventoryPage() {
   const [isClient, setIsClient] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  // Data states
+  
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -102,14 +102,14 @@ export default function InventoryPage() {
     pages: 0,
   });
 
-  // UI states
+  
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSupplier, setSelectedSupplier] = useState("");
   const [stockFilter, setStockFilter] = useState("");
 
-  // Modal states
+  
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [stockModalOpen, setStockModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -118,7 +118,7 @@ export default function InventoryPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  // Redirect to login if not authenticated
+  
   useEffect(() => {
     if (status === "loading") return;
     
@@ -128,7 +128,7 @@ export default function InventoryPage() {
     }
   }, [session, status, router]);
 
-  // Initialize component
+  
   useEffect(() => {
     setIsClient(true);
 
@@ -154,7 +154,7 @@ export default function InventoryPage() {
     };
   }, []);
 
-  // Fetch data functions
+  
   const fetchProducts = async () => {
     try {
       setLoading(true);
@@ -202,7 +202,7 @@ export default function InventoryPage() {
     }
   };
 
-  // Load initial data
+  
   useEffect(() => {
     if (session) {
       fetchCategories();
@@ -210,14 +210,14 @@ export default function InventoryPage() {
     }
   }, [session]);
 
-  // Fetch products when filters change
+  
   useEffect(() => {
     if (session) {
       fetchProducts();
     }
   }, [session, pagination.page, searchTerm, selectedCategory, selectedSupplier, stockFilter]);
 
-  // Helper functions
+  
   const getStockStatus = (product: Product) => {
     if (product.stock <= 0) return "out";
     if (product.stock <= product.minStock) return "low";
@@ -240,7 +240,7 @@ export default function InventoryPage() {
     }).format(amount);
   };
 
-  // Modal handlers
+  
   const handleCreateProduct = () => {
     setSelectedProduct(null);
     setModalMode("create");
@@ -354,7 +354,7 @@ export default function InventoryPage() {
     }
   };
 
-  // Animation variants
+  
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -388,7 +388,7 @@ export default function InventoryPage() {
     },
   };
 
-  // Show loading if session is still loading or user is not authenticated
+  
   if (status === "loading" || !session) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900 flex items-center justify-center">

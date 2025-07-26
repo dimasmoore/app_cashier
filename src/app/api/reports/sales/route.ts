@@ -19,11 +19,11 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get("endDate");
     const reportType = searchParams.get("reportType") || "sales";
 
-    // Parse and validate date range
+    
     const start = startDate ? new Date(startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const end = endDate ? new Date(endDate) : new Date();
 
-    // Validate date range
+    
     try {
       validateDateRange(start, end);
     } catch (error) {
@@ -33,10 +33,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Ensure end date includes the full day
+    
     end.setHours(23, 59, 59, 999);
 
-    // Check cache first
+    
     const cacheKey = generateSalesReportCacheKey(
       start.toISOString(),
       end.toISOString(),
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Get completed transactions within date range with optimized query
+    
     const transactions = await measureDatabaseQuery('sales-transactions', () =>
       prisma.transaction.findMany({
       where: {
@@ -95,13 +95,13 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      // Add ordering for consistent results
+      
       orderBy: {
         createdAt: 'desc',
       },
     }), { dateRange: `${start.toISOString()}-${end.toISOString()}` });
 
-    // Calculate basic metrics
+    
     const totalTransactions = transactions.length;
     const totalRevenue = transactions.reduce((sum, t) => sum + Number(t.total), 0);
     const totalSales = transactions.reduce((sum, t) =>
@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
     );
     const averageOrderValue = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
 
-    // Get top products by quantity sold
+    
     const productSales = new Map<string, {
       id: string;
       name: string;
@@ -142,7 +142,7 @@ export async function GET(request: NextRequest) {
     const topProducts = Array.from(productSales.values())
       .sort((a, b) => b.quantitySold - a.quantitySold)
       .slice(0, 10);
-    // Get sales by category
+    
     const categorySales = new Map<string, {
       categoryId: string;
       categoryName: string;
@@ -164,20 +164,20 @@ export async function GET(request: NextRequest) {
             categoryName: item.product.category.name,
             totalSales: item.quantity,
             totalRevenue: Number(item.totalPrice),
-            percentage: 0, // Will calculate after
+            percentage: 0, 
           });
         }
       });
     });
 
-    // Calculate percentages
+    
     const salesByCategory = Array.from(categorySales.values());
     salesByCategory.forEach(category => {
       category.percentage = totalRevenue > 0 ?
         Math.round((category.totalRevenue / totalRevenue) * 100) : 0;
     });
     salesByCategory.sort((a, b) => b.totalRevenue - a.totalRevenue);
-    // Generate sales trend data (daily aggregation)
+    
     const salesTrendMap = new Map<string, {
       date: string;
       sales: number;
@@ -207,7 +207,7 @@ export async function GET(request: NextRequest) {
     const salesTrend = Array.from(salesTrendMap.values())
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-    // Get payment method breakdown
+    
     const paymentMethodMap = new Map<string, {
       method: string;
       count: number;
@@ -227,12 +227,12 @@ export async function GET(request: NextRequest) {
           method: method,
           count: 1,
           amount: Number(transaction.total),
-          percentage: 0, // Will calculate after
+          percentage: 0, 
         });
       }
     });
 
-    // Calculate payment method percentages
+    
     const paymentMethodBreakdown = Array.from(paymentMethodMap.values());
     paymentMethodBreakdown.forEach(method => {
       method.percentage = totalRevenue > 0 ?
@@ -249,7 +249,7 @@ export async function GET(request: NextRequest) {
       salesByCategory,
       salesTrend,
       paymentMethodBreakdown,
-      // Add metadata
+      
       lastUpdated: new Date().toISOString(),
       dateRange: {
         startDate: start.toISOString(),
@@ -258,7 +258,7 @@ export async function GET(request: NextRequest) {
       isRealTime: true,
     };
 
-    // Cache the result
+    
     cache.set(cacheKey, salesData, CACHE_TTL.SALES_REPORT);
 
     return NextResponse.json({

@@ -1,8 +1,8 @@
 import { z } from "zod";
 
-// ================================
-// REPORTS VALIDATION SCHEMAS
-// ================================
+
+
+
 
 export const ReportFiltersSchema = z.object({
   dateRange: z.object({
@@ -88,9 +88,9 @@ export const PaginationSchema = z.object({
   hasPrev: z.boolean(),
 });
 
-// ================================
-// API RESPONSE SCHEMAS
-// ================================
+
+
+
 
 export const ApiResponseSchema = z.object({
   success: z.boolean(),
@@ -109,16 +109,16 @@ export const TransactionsApiResponseSchema = ApiResponseSchema.extend({
   pagination: PaginationSchema.optional(),
 });
 
-// ================================
-// VALIDATION FUNCTIONS
-// ================================
+
+
+
 
 export function validateReportFilters(data: unknown) {
   try {
     return ReportFiltersSchema.parse(data);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      throw new Error(`Invalid report filters: ${error.errors.map(e => e.message).join(", ")}`);
+      throw new Error(`Invalid report filters: ${error.issues.map((issue) => issue.message).join(", ")}`);
     }
     throw error;
   }
@@ -129,7 +129,7 @@ export function validateSalesReportData(data: unknown) {
     return SalesReportDataSchema.parse(data);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      throw new Error(`Invalid sales report data: ${error.errors.map(e => e.message).join(", ")}`);
+      throw new Error(`Invalid sales report data: ${error.issues.map(issue => issue.message).join(", ")}`);
     }
     throw error;
   }
@@ -140,7 +140,7 @@ export function validateTransactionReportData(data: unknown) {
     return z.array(TransactionReportDataSchema).parse(data);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      throw new Error(`Invalid transaction report data: ${error.errors.map(e => e.message).join(", ")}`);
+      throw new Error(`Invalid transaction report data: ${error.issues.map(issue => issue.message).join(", ")}`);
     }
     throw error;
   }
@@ -151,22 +151,22 @@ export function validateApiResponse(data: unknown) {
     return ApiResponseSchema.parse(data);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      throw new Error(`Invalid API response: ${error.errors.map(e => e.message).join(", ")}`);
+      throw new Error(`Invalid API response: ${error.issues.map(issue => issue.message).join(", ")}`);
     }
     throw error;
   }
 }
 
-// ================================
-// DATE VALIDATION HELPERS
-// ================================
+
+
+
 
 export function validateDateRange(startDate: Date, endDate: Date) {
   if (startDate > endDate) {
     throw new Error("Start date must be before end date");
   }
   
-  const maxRange = 365 * 24 * 60 * 60 * 1000; // 1 year in milliseconds
+  const maxRange = 365 * 24 * 60 * 60 * 1000; 
   if (endDate.getTime() - startDate.getTime() > maxRange) {
     throw new Error("Date range cannot exceed 1 year");
   }
@@ -178,16 +178,16 @@ export function validateDateRange(startDate: Date, endDate: Date) {
 }
 
 export function sanitizeSearchQuery(query: string): string {
-  // Remove potentially dangerous characters and limit length
+  
   return query
     .replace(/[<>\"'%;()&+]/g, "")
     .trim()
     .substring(0, 100);
 }
 
-// ================================
-// TYPE EXPORTS
-// ================================
+
+
+
 
 export type ValidatedReportFilters = z.infer<typeof ReportFiltersSchema>;
 export type ValidatedSalesReportData = z.infer<typeof SalesReportDataSchema>;

@@ -1,4 +1,4 @@
-// Performance monitoring utilities
+
 
 interface PerformanceMetric {
   name: string;
@@ -11,19 +11,19 @@ class PerformanceMonitor {
   private metrics: PerformanceMetric[] = [];
   private maxMetrics = 1000;
 
-  // Start timing an operation
-  startTimer(name: string): () => void {
+  
+  startTimer(name: string): (metadata?: Record<string, any>) => void {
     const startTime = performance.now();
-    
+
     return (metadata?: Record<string, any>) => {
       const duration = performance.now() - startTime;
       this.addMetric(name, duration, metadata);
     };
   }
 
-  // Add a metric manually
+  
   addMetric(name: string, duration: number, metadata?: Record<string, any>): void {
-    // Remove oldest metrics if we exceed the limit
+    
     if (this.metrics.length >= this.maxMetrics) {
       this.metrics.shift();
     }
@@ -36,7 +36,7 @@ class PerformanceMonitor {
     });
   }
 
-  // Get metrics for a specific operation
+  
   getMetrics(name?: string): PerformanceMetric[] {
     if (name) {
       return this.metrics.filter(metric => metric.name === name);
@@ -44,7 +44,7 @@ class PerformanceMonitor {
     return [...this.metrics];
   }
 
-  // Get average duration for an operation
+  
   getAverageDuration(name: string): number {
     const metrics = this.getMetrics(name);
     if (metrics.length === 0) return 0;
@@ -53,13 +53,13 @@ class PerformanceMonitor {
     return total / metrics.length;
   }
 
-  // Get performance statistics
+  
   getStats(name?: string): {
     count: number;
     average: number;
     min: number;
     max: number;
-    recent: number; // Last 10 operations average
+    recent: number; 
   } {
     const metrics = this.getMetrics(name);
     
@@ -82,21 +82,21 @@ class PerformanceMonitor {
     };
   }
 
-  // Clear all metrics
+  
   clear(): void {
     this.metrics = [];
   }
 
-  // Get slow operations (above threshold)
+  
   getSlowOperations(thresholdMs: number = 1000): PerformanceMetric[] {
     return this.metrics.filter(metric => metric.duration > thresholdMs);
   }
 }
 
-// Create singleton instance
+
 export const performanceMonitor = new PerformanceMonitor();
 
-// Utility functions for common operations
+
 export function measureApiCall<T>(
   name: string,
   operation: () => Promise<T>,
@@ -106,11 +106,11 @@ export function measureApiCall<T>(
   
   return operation()
     .then(result => {
-      endTimer({ ...metadata, success: true });
+      endTimer({ ...(metadata || {}), success: true });
       return result;
     })
     .catch(error => {
-      endTimer({ ...metadata, success: false, error: error.message });
+      endTimer({ ...(metadata || {}), success: false, error: error.message });
       throw error;
     });
 }
@@ -124,45 +124,45 @@ export function measureDatabaseQuery<T>(
   
   return query()
     .then(result => {
-      endTimer({ ...metadata, success: true });
+      endTimer({ ...(metadata || {}), success: true });
       return result;
     })
     .catch(error => {
-      endTimer({ ...metadata, success: false, error: error.message });
+      endTimer({ ...(metadata || {}), success: false, error: error.message });
       throw error;
     });
 }
 
-// React hook for measuring component render time
+
 export function useMeasureRender(componentName: string) {
   if (typeof window !== 'undefined') {
     const endTimer = performanceMonitor.startTimer(`render:${componentName}`);
     
-    // Measure on next tick to capture full render
+    
     setTimeout(() => {
       endTimer();
     }, 0);
   }
 }
 
-// Performance thresholds
+
 export const PERFORMANCE_THRESHOLDS = {
-  API_CALL: 2000, // 2 seconds
-  DATABASE_QUERY: 1000, // 1 second
-  COMPONENT_RENDER: 100, // 100ms
+  API_CALL: 2000, 
+  DATABASE_QUERY: 1000, 
+  COMPONENT_RENDER: 100, 
 } as const;
 
-// Log slow operations to console in development
+
 if (process.env.NODE_ENV === 'development') {
   setInterval(() => {
     const slowOps = performanceMonitor.getSlowOperations(PERFORMANCE_THRESHOLDS.API_CALL);
     if (slowOps.length > 0) {
       console.warn('Slow operations detected:', slowOps);
     }
-  }, 30000); // Check every 30 seconds
+  }, 30000); 
 }
 
-// Export performance data for monitoring
+
 export function getPerformanceReport() {
   return {
     timestamp: new Date().toISOString(),

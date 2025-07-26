@@ -20,13 +20,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Search for product by barcode
+    
     const product = await prisma.product.findFirst({
       where: {
         barcode,
         isActive: true,
         stock: {
-          gt: 0, // Only show products with stock
+          gt: 0, 
         },
       },
       include: {
@@ -49,11 +49,11 @@ export async function GET(request: NextRequest) {
     });
 
     if (!product) {
-      // Log the barcode scan attempt
+      
       await prisma.barcodeLog.create({
         data: {
           barcode,
-          scanResult: "NOT_FOUND",
+          scanResult: "PRODUCT_NOT_FOUND",
           productFound: false,
           userId: session.user.id,
           errorMessage: "Product not found or out of stock",
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Log successful barcode scan
+    
     await prisma.barcodeLog.create({
       data: {
         barcode,
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Format the response
+    
     const formattedProduct = {
       id: product.id,
       name: product.name,
