@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting database seeding...');
 
-  // Create default admin user
+  
   const hashedPassword = await bcrypt.hash('admin123', 12);
   
   const adminUser = await prisma.user.upsert({
@@ -30,7 +30,7 @@ async function main() {
     role: adminUser.role,
   });
 
-  // Create sample categories
+  
   const categories = await Promise.all([
     prisma.category.upsert({
       where: { name: 'Makanan' },
@@ -60,7 +60,7 @@ async function main() {
 
   console.log('✅ Created categories:', categories.length);
 
-  // Create sample supplier (using findFirst + create since name is not unique)
+  
   let supplier = await prisma.supplier.findFirst({
     where: { name: 'PT Supplier Utama' },
   });
@@ -79,7 +79,7 @@ async function main() {
 
   console.log('✅ Created supplier:', supplier.name);
 
-  // Create additional sample suppliers
+  
   const suppliers = [supplier];
 
   let supplier2 = await prisma.supplier.findFirst({
@@ -118,7 +118,7 @@ async function main() {
 
   console.log('✅ Created suppliers:', suppliers.length);
 
-  // Create sample products
+  
   const products = await Promise.all([
     prisma.product.upsert({
       where: { sku: 'FOOD001' },
@@ -133,7 +133,7 @@ async function main() {
         stock: 50,
         minStock: 10,
         categoryId: categories[0].id,
-        supplierId: suppliers[0].id, // PT Supplier Utama
+        supplierId: suppliers[0].id, 
       },
     }),
     prisma.product.upsert({
@@ -149,7 +149,7 @@ async function main() {
         stock: 100,
         minStock: 20,
         categoryId: categories[1].id,
-        supplierId: supplier2?.id || suppliers[0].id, // CV Elektronik Jaya
+        supplierId: supplier2?.id || suppliers[0].id, 
       },
     }),
     prisma.product.upsert({
@@ -165,10 +165,10 @@ async function main() {
         stock: 30,
         minStock: 5,
         categoryId: categories[2].id,
-        supplierId: supplier3?.id || suppliers[0].id, // Toko Fashion Modern
+        supplierId: supplier3?.id || suppliers[0].id, 
       },
     }),
-    // Additional products for better demo data
+    
     prisma.product.upsert({
       where: { sku: 'FOOD002' },
       update: {},
@@ -221,7 +221,7 @@ async function main() {
 
   console.log('✅ Created products:', products.length);
 
-  // Create sample customers
+  
   const customers = await Promise.all([
     prisma.customer.upsert({
       where: { email: 'customer1@example.com' },

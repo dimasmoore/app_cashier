@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import {
   Card,
   CardContent,
@@ -92,9 +93,10 @@ export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  
+  usePageTitle("Dashboard");
+
   useEffect(() => {
-    if (status === "loading") return; 
+    if (status === "loading") return;
 
     if (!session) {
       router.push("/");

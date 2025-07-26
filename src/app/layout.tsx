@@ -15,8 +15,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Cashier Login - POS System",
-  description: "Modern cashier login interface for point-of-sale system",
+  title: {
+    template: "%s - POS System",
+    default: "POS System",
+  },
+  description: "Modern point-of-sale system for efficient business management",
 };
 
 export default function RootLayout({

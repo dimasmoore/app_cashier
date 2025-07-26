@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { signIn, getSession, useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import {
   Card,
   CardContent,
@@ -36,9 +37,10 @@ export default function CashierLogin() {
   const router = useRouter();
   const { data: session, status } = useSession();
 
-  
+  usePageTitle("Login");
+
   useEffect(() => {
-    if (status === "loading") return; 
+    if (status === "loading") return;
 
     if (session) {
       router.push("/Dashboard");

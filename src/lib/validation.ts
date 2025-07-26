@@ -109,6 +109,94 @@ export const TransactionsApiResponseSchema = ApiResponseSchema.extend({
   pagination: PaginationSchema.optional(),
 });
 
+export const CustomerFormSchema = z.object({
+  firstName: z.string().min(1, "First name is required").max(50, "First name must be less than 50 characters"),
+  lastName: z.string().min(1, "Last name is required").max(50, "Last name must be less than 50 characters"),
+  email: z.string().optional().refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+    message: "Invalid email format",
+  }),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  dateOfBirth: z.string().optional(),
+});
+
+export const CustomerFiltersSchema = z.object({
+  search: z.string().optional(),
+  sortBy: z.enum(["firstName", "lastName", "email", "phone", "createdAt", "updatedAt"]).optional(),
+  sortOrder: z.enum(["asc", "desc"]).optional(),
+  page: z.number().min(1).optional(),
+  limit: z.number().min(1).max(100).optional(),
+});
+
+export const CustomerSchema = z.object({
+  id: z.string(),
+  firstName: z.string(),
+  lastName: z.string(),
+  email: z.string().nullable(),
+  phone: z.string().nullable(),
+  address: z.string().nullable(),
+  dateOfBirth: z.date().nullable(),
+  isActive: z.boolean(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  _count: z.object({
+    transactions: z.number(),
+  }).optional(),
+});
+
+export const CustomerListResponseSchema = ApiResponseSchema.extend({
+  data: z.array(CustomerSchema),
+  pagination: PaginationSchema,
+});
+
+export const CustomerResponseSchema = ApiResponseSchema.extend({
+  data: CustomerSchema,
+});
+
+export const CategoryFormSchema = z.object({
+  name: z.string().min(1, "Nama kategori harus diisi").max(100, "Nama kategori maksimal 100 karakter"),
+  description: z.string().optional(),
+  isActive: z.boolean().default(true),
+});
+
+export const SupplierFormSchema = z.object({
+  name: z.string().min(1, "Nama supplier harus diisi").max(100, "Nama supplier maksimal 100 karakter"),
+  email: z.string().optional().refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+    message: "Format email tidak valid",
+  }),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  contactPerson: z.string().optional(),
+  isActive: z.boolean().default(true),
+});
+
+export const CategorySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().nullable(),
+  isActive: z.boolean(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  _count: z.object({
+    products: z.number(),
+  }).optional(),
+});
+
+export const SupplierSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string().nullable(),
+  phone: z.string().nullable(),
+  address: z.string().nullable(),
+  contactPerson: z.string().nullable(),
+  isActive: z.boolean(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  _count: z.object({
+    products: z.number(),
+  }).optional(),
+});
+
 
 
 

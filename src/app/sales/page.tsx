@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import {
   Card,
   CardContent,
@@ -82,7 +83,8 @@ export default function SalesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  
+  usePageTitle("Penjualan");
+
   useEffect(() => {
     if (status === "loading") return;
     if (!session) {

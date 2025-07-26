@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import {
   Card,
   CardContent,
@@ -12,6 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ProductModal from "@/components/inventory/ProductModal";
 import StockAdjustmentModal from "@/components/inventory/StockAdjustmentModal";
+import CategoryModal from "@/components/inventory/CategoryModal";
+import SupplierModal from "@/components/inventory/SupplierModal";
+import { CategoryFormData, SupplierFormData, InventoryModalMode } from "@/types/inventory";
 import {
   FiSearch,
   FiPlus,
@@ -26,6 +30,8 @@ import {
   FiLogOut,
   FiPackage,
   FiUsers,
+  FiTag,
+  FiTruck,
 } from "react-icons/fi";
 
 interface Product {
@@ -62,7 +68,10 @@ interface Product {
 interface Category {
   id: string;
   name: string;
-  description?: string;
+  description?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
   _count: {
     products: number;
   };
@@ -71,8 +80,13 @@ interface Category {
 interface Supplier {
   id: string;
   name: string;
-  email?: string;
-  phone?: string;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  contactPerson?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
   _count: {
     products: number;
   };
@@ -109,19 +123,27 @@ export default function InventoryPage() {
   const [selectedSupplier, setSelectedSupplier] = useState("");
   const [stockFilter, setStockFilter] = useState("");
 
-  
+
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [stockModalOpen, setStockModalOpen] = useState(false);
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [supplierModalOpen, setSupplierModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+  const [productModalMode, setProductModalMode] = useState<"create" | "edit">("create");
+  const [categoryModalMode, setCategoryModalMode] = useState<InventoryModalMode>("create");
+  const [supplierModalMode, setSupplierModalMode] = useState<InventoryModalMode>("create");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  
+  usePageTitle("Inventori");
+
   useEffect(() => {
     if (status === "loading") return;
-    
+
     if (!session) {
       router.push("/");
       return;
@@ -243,13 +265,13 @@ export default function InventoryPage() {
   
   const handleCreateProduct = () => {
     setSelectedProduct(null);
-    setModalMode("create");
+    setProductModalMode("create");
     setProductModalOpen(true);
   };
 
   const handleEditProduct = (product: Product) => {
     setSelectedProduct(product);
-    setModalMode("edit");
+    setProductModalMode("edit");
     setProductModalOpen(true);
   };
 
@@ -272,11 +294,11 @@ export default function InventoryPage() {
     supplierId?: string;
   }) => {
     try {
-      const url = modalMode === "create"
+      const url = productModalMode === "create"
         ? "/api/inventory/products"
         : `/api/inventory/products/${selectedProduct?.id}`;
 
-      const method = modalMode === "create" ? "POST" : "PUT";
+      const method = productModalMode === "create" ? "POST" : "PUT";
 
       const response = await fetch(url, {
         method,
@@ -354,7 +376,85 @@ export default function InventoryPage() {
     }
   };
 
-  
+  // Category handlers
+  const handleCreateCategory = () => {
+    setEditingCategory(null);
+    setCategoryModalMode("create");
+    setCategoryModalOpen(true);
+  };
+
+  const handleSaveCategory = async (categoryData: CategoryFormData) => {
+    try {
+      setIsSubmitting(true);
+      const url = categoryModalMode === "create"
+        ? "/api/inventory/categories"
+        : `/api/inventory/categories/${editingCategory?.id}`;
+
+      const method = categoryModalMode === "create" ? "POST" : "PUT";
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(categoryData),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to save category");
+      }
+
+      setCategoryModalOpen(false);
+      await fetchCategories();
+    } catch (error) {
+      console.error("Error saving category:", error);
+      alert("Gagal menyimpan kategori");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Supplier handlers
+  const handleCreateSupplier = () => {
+    setEditingSupplier(null);
+    setSupplierModalMode("create");
+    setSupplierModalOpen(true);
+  };
+
+  const handleSaveSupplier = async (supplierData: SupplierFormData) => {
+    try {
+      setIsSubmitting(true);
+      const url = supplierModalMode === "create"
+        ? "/api/inventory/suppliers"
+        : `/api/inventory/suppliers/${editingSupplier?.id}`;
+
+      const method = supplierModalMode === "create" ? "POST" : "PUT";
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(supplierData),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to save supplier");
+      }
+
+      setSupplierModalOpen(false);
+      await fetchSuppliers();
+    } catch (error) {
+      console.error("Error saving supplier:", error);
+      alert("Gagal menyimpan supplier");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -540,7 +640,7 @@ export default function InventoryPage() {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                       <Button
                         variant="outline"
@@ -556,13 +656,40 @@ export default function InventoryPage() {
 
                     <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                       <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCreateCategory}
+                        className="border-green-200 text-green-700 hover:bg-green-50 dark:border-green-600 dark:text-green-400 dark:hover:bg-green-900/20"
+                      >
+                        <FiTag className="w-4 h-4 mr-2" />
+                        <span className="hidden sm:inline">Tambah Kategori</span>
+                        <span className="sm:hidden">Kategori</span>
+                      </Button>
+                    </motion.div>
+
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCreateSupplier}
+                        className="border-purple-200 text-purple-700 hover:bg-purple-50 dark:border-purple-600 dark:text-purple-400 dark:hover:bg-purple-900/20"
+                      >
+                        <FiTruck className="w-4 h-4 mr-2" />
+                        <span className="hidden sm:inline">Tambah Supplier</span>
+                        <span className="sm:hidden">Supplier</span>
+                      </Button>
+                    </motion.div>
+
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button
                         variant="default"
                         size="sm"
                         onClick={handleCreateProduct}
                         className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
                       >
                         <FiPlus className="w-4 h-4 mr-2" />
-                        Tambah Produk
+                        <span className="hidden sm:inline">Tambah Produk</span>
+                        <span className="sm:hidden">Produk</span>
                       </Button>
                     </motion.div>
                   </div>
@@ -849,7 +976,7 @@ export default function InventoryPage() {
         product={selectedProduct || undefined}
         categories={categories}
         suppliers={suppliers}
-        mode={modalMode}
+        mode={productModalMode}
       />
 
       <StockAdjustmentModal
@@ -857,6 +984,24 @@ export default function InventoryPage() {
         onClose={() => setStockModalOpen(false)}
         onSave={handleSaveStockAdjustment}
         product={selectedProduct || undefined}
+      />
+
+      <CategoryModal
+        isOpen={categoryModalOpen}
+        onClose={() => setCategoryModalOpen(false)}
+        onSubmit={handleSaveCategory}
+        category={editingCategory}
+        mode={categoryModalMode}
+        isLoading={isSubmitting}
+      />
+
+      <SupplierModal
+        isOpen={supplierModalOpen}
+        onClose={() => setSupplierModalOpen(false)}
+        onSubmit={handleSaveSupplier}
+        supplier={editingSupplier}
+        mode={supplierModalMode}
+        isLoading={isSubmitting}
       />
     </div>
   );

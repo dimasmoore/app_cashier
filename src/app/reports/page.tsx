@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import {
   FiHome,
   FiChevronRight,
@@ -422,7 +423,8 @@ export default function ReportsPage() {
     }
   }, [filters]);
 
-  
+  usePageTitle("Laporan");
+
   useEffect(() => {
     if (status === "loading") return;
     if (!session) {
