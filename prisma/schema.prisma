@@ -1,0 +1,307 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ================================
+// USER MANAGEMENT
+// ================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  phone     String?
+  role      UserRole @default(ADMIN)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  transactions Transaction[]
+  stockMovements StockMovement[]
+  barcodeLogs BarcodeLog[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+}
+
+// ================================
+// INVENTORY MANAGEMENT
+// ================================
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  products Product[]
+
+  @@map("categories")
+}
+
+model Supplier {
+  id          String   @id @default(cuid())
+  name        String
+  email       String?
+  phone       String?
+  address     String?
+  contactPerson String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  products Product[]
+
+  @@map("suppliers")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  sku         String   @unique
+  barcode     String?  @unique
+  price       Decimal  @db.Decimal(10, 2)
+  cost        Decimal? @db.Decimal(10, 2)
+  stock       Int      @default(0)
+  minStock    Int      @default(0)
+  maxStock    Int?
+  // Product Image Management
+  primaryImageUrl String?
+  imageUrls   Json?    // Array of image URLs stored as JSON
+  hasImages   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Foreign Keys
+  categoryId String
+  supplierId String?
+
+  // Relations
+  category       Category        @relation(fields: [categoryId], references: [id])
+  supplier       Supplier?       @relation(fields: [supplierId], references: [id])
+  transactionItems TransactionItem[]
+  stockMovements StockMovement[]
+  productImages  ProductImage[]
+  barcodeLogs    BarcodeLog[]
+
+  // Indexes for barcode scanning optimization
+  @@index([barcode])
+  @@index([sku])
+  @@map("products")
+}
+
+model StockMovement {
+  id          String            @id @default(cuid())
+  type        StockMovementType
+  quantity    Int
+  reason      String?
+  notes       String?
+  createdAt   DateTime          @default(now())
+
+  // Foreign Keys
+  productId String
+  userId    String
+
+  // Relations
+  product Product @relation(fields: [productId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@map("stock_movements")
+}
+
+enum StockMovementType {
+  IN
+  OUT
+  ADJUSTMENT
+  SALE
+  RETURN
+  DAMAGED
+  EXPIRED
+}
+
+model ProductImage {
+  id          String   @id @default(cuid())
+  filename    String
+  originalName String
+  url         String
+  size        Int      // File size in bytes
+  mimeType    String
+  isActive    Boolean  @default(true)
+  isPrimary   Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Foreign Keys
+  productId String
+
+  // Relations
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([isPrimary])
+  @@map("product_images")
+}
+
+// ================================
+// CUSTOMER MANAGEMENT
+// ================================
+
+model Customer {
+  id        String   @id @default(cuid())
+  firstName String
+  lastName  String
+  email     String?  @unique
+  phone     String?
+  address   String?
+  dateOfBirth DateTime?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  transactions Transaction[]
+
+  @@map("customers")
+}
+
+// ================================
+// TRANSACTION SYSTEM
+// ================================
+
+model Transaction {
+  id            String            @id @default(cuid())
+  transactionNumber String       @unique
+  status        TransactionStatus @default(PENDING)
+  subtotal      Decimal          @db.Decimal(10, 2)
+  taxAmount     Decimal          @db.Decimal(10, 2) @default(0)
+  discountAmount Decimal         @db.Decimal(10, 2) @default(0)
+  total         Decimal          @db.Decimal(10, 2)
+  paymentMethod PaymentMethod
+  paymentStatus PaymentStatus    @default(PENDING)
+  notes         String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  // Foreign Keys
+  customerId String?
+  userId     String
+
+  // Relations
+  customer Customer? @relation(fields: [customerId], references: [id])
+  user     User      @relation(fields: [userId], references: [id])
+  items    TransactionItem[]
+  barcodeLogs BarcodeLog[]
+
+  @@map("transactions")
+}
+
+model TransactionItem {
+  id          String  @id @default(cuid())
+  quantity    Int
+  unitPrice   Decimal @db.Decimal(10, 2)
+  totalPrice  Decimal @db.Decimal(10, 2)
+  discount    Decimal @db.Decimal(10, 2) @default(0)
+  // Barcode Integration for Transactions
+  scannedBarcode String? // Store the actual barcode that was scanned
+  addedViaBarcode Boolean @default(false) // Track if item was added via barcode scan
+  // Additional transaction tracking
+  productName String  // Store product name at time of transaction
+  productSku  String  // Store SKU at time of transaction
+  createdAt   DateTime @default(now())
+
+  // Foreign Keys
+  transactionId String
+  productId     String
+
+  // Relations
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  product     Product     @relation(fields: [productId], references: [id])
+
+  @@index([scannedBarcode])
+  @@map("transaction_items")
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CASH
+  CREDIT_CARD
+  DEBIT_CARD
+  DIGITAL_WALLET
+  BANK_TRANSFER
+  CHECK
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_PAID
+}
+
+// ================================
+// BARCODE INTEGRATION & LOGGING
+// ================================
+
+model BarcodeLog {
+  id          String            @id @default(cuid())
+  barcode     String
+  scanResult  BarcodeScanResult
+  productFound Boolean         @default(false)
+  scanDuration Int?            // Scan time in milliseconds
+  deviceInfo  String?          // Scanner device information
+  errorMessage String?         // Error message if scan failed
+  createdAt   DateTime         @default(now())
+
+  // Foreign Keys
+  productId String?
+  userId    String
+  transactionId String?
+
+  // Relations
+  product     Product?     @relation(fields: [productId], references: [id])
+  user        User         @relation(fields: [userId], references: [id])
+  transaction Transaction? @relation(fields: [transactionId], references: [id])
+
+  @@index([barcode])
+  @@index([createdAt])
+  @@map("barcode_logs")
+}
+
+enum BarcodeScanResult {
+  SUCCESS
+  PRODUCT_NOT_FOUND
+  INVALID_BARCODE
+  SCAN_ERROR
+  DUPLICATE_SCAN
+}
